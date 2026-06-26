@@ -1,0 +1,74 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://main.gd" id="1_ti5k8"]
+[ext_resource type="PackedScene" path="res://entities/paddle.tscn" id="2_p4fn3"]
+[ext_resource type="Script" path="res://entities/laser_manager.gd" id="3_w7kq1"]
+[ext_resource type="PackedScene" path="res://ui/hud.tscn" id="4_xc9b2"]
+[ext_resource type="Shader" path="res://shaders/scanline.gdshader" id="5_oe4kj"]
+[ext_resource type="Script" path="res://entities/playfield_border.gd" id="6_pb1gd"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_ti5k8")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_scanbg"]
+shader = ExtResource("5_oe4kj")
+shader_parameter/speed = 0.5
+shader_parameter/intensity = 0.08
+
+[node name="BackgroundOverlay" type="ColorRect" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 0.0
+offset_top = 0.0
+color = Color(0.08, 0.05, 0.15, 1.0)
+mouse_filter = 2
+material = SubResource("ShaderMaterial_scanbg")
+
+[node name="Paddle" parent="." instance=ExtResource("2_p4fn3")]
+
+[node name="Balls" type="Node2D" parent="."]
+
+[node name="Bricks" type="Node2D" parent="."]
+
+[node name="PowerUps" type="Node2D" parent="."]
+
+[node name="LaserManager" type="Node2D" parent="."]
+script = ExtResource("3_w7kq1")
+
+[node name="HUD" parent="." instance=ExtResource("4_xc9b2")]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_sidewall"]
+size = Vector2(20, 720)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_topwall"]
+size = Vector2(1280, 20)
+
+[node name="LeftWall" type="StaticBody2D" parent="."]
+position = Vector2(10, 360)
+collision_layer = 32
+collision_mask = 0
+
+[node name="CollisionShape2D" parent="LeftWall"]
+shape = SubResource("RectangleShape2D_sidewall")
+
+[node name="RightWall" type="StaticBody2D" parent="."]
+position = Vector2(1270, 360)
+collision_layer = 32
+collision_mask = 0
+
+[node name="CollisionShape2D" parent="RightWall"]
+shape = SubResource("RectangleShape2D_sidewall")
+
+[node name="TopWall" type="StaticBody2D" parent="."]
+position = Vector2(640, 10)
+collision_layer = 32
+collision_mask = 0
+
+[node name="CollisionShape2D" parent="TopWall"]
+shape = SubResource("RectangleShape2D_topwall")
+
+[node name="ScoreSfx" type="AudioStreamPlayer" parent="."]
+
+[node name="PlayfieldBorder" type="Node2D" parent="."]
+script = ExtResource("6_pb1gd")

@@ -1,0 +1,288 @@
+
+<h2 class="sr-only">Breakout codebase review — launch, mechanics, and aesthetic findings</h2>
+
+<style>
+  :root { --gap: 12px; }
+  .wrap { padding: 1rem 0 2rem; font-size: 15px; }
+  .section-head { display: flex; align-items: center; gap: 10px; margin: 2rem 0 0.75rem; padding-bottom: 8px; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .section-head i { font-size: 20px; }
+  .section-head h3 { margin: 0; font-size: 16px; font-weight: 500; color: var(--color-text-primary); }
+  .section-head .count { margin-left: auto; font-size: 12px; background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: 999px; padding: 2px 10px; color: var(--color-text-secondary); }
+  .finding { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; margin-bottom: var(--gap); }
+  .finding-head { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+  .sev { font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 999px; white-space: nowrap; flex-shrink: 0; margin-top: 1px; }
+  .sev-high { background: #FCEBEB; color: #A32D2D; }
+  .sev-med { background: #FAEEDA; color: #854F0B; }
+  .sev-low { background: #EAF3DE; color: #3B6D11; }
+  .finding-title { font-size: 15px; font-weight: 500; color: var(--color-text-primary); line-height: 1.4; }
+  .finding-body { font-size: 14px; color: var(--color-text-secondary); line-height: 1.65; }
+  .finding-body p { margin: 0 0 6px; }
+  pre { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 0.65rem 0.9rem; font-family: var(--font-mono); font-size: 12.5px; overflow-x: auto; margin: 8px 0; line-height: 1.55; border: 0.5px solid var(--color-border-tertiary); }
+  .file-badge { display: inline-block; font-family: var(--font-mono); font-size: 11.5px; background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 2px 8px; color: var(--color-text-secondary); margin-bottom: 8px; }
+  .fix-label { font-size: 12px; font-weight: 500; color: #3B6D11; margin: 8px 0 3px; }
+</style>
+
+<div class="wrap">
+
+  <div class="section-head">
+    <i class="ti ti-alert-triangle" style="color: #A32D2D;" aria-hidden="true"></i>
+    <h3>Launch &amp; scene management</h3>
+    <span class="count">4 findings</span>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head">
+      <span class="sev sev-high">High</span>
+      <span class="finding-title"><code>_on_ball_lost</code> not guarded against <code>LEVEL_INTRO</code> phase</span>
+    </div>
+    <div class="finding-body">
+      <span class="file-badge">main.gd</span>
+      <p>The guard only skips <code>GAME_OVER</code> and <code>ROUND_CLEAR</code>. During the 1.2-second <code>LEVEL_INTRO</code> await, no ball exists yet — but if one survived from a prior round somehow (e.g. a sticky-caught ball during a rapid transition) and exits the screen, a life is incorrectly deducted.</p>
+      <pre>func _on_ball_lost() -> void:
+    if phase in [GameState.Phase.GAME_OVER, GameState.Phase.ROUND_CLEAR]:
+        return   # LEVEL_INTRO missing from this guard</pre>
+      <div class="fix-label">Fix</div>
+      <pre>if phase in [GameState.Phase.GAME_OVER, GameState.Phase.ROUND_CLEAR,
+             GameState.Phase.LEVEL_INTRO]:
+    return</pre>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head">
+      <span class="sev sev-med">Medium</span>
+      <span class="finding-title">Initial <code>phase</code> value is misleading</span>
+    </div>
+    <div class="finding-body">
+      <span class="file-badge">main.gd</span>
+      <p><code>phase</code> starts as <code>TITLE</code> but <code>_ready()</code> immediately calls <code>_start_new_run()</code> → <code>_load_level()</code> → <code>_start_level_intro()</code>, which sets it to <code>LEVEL_INTRO</code>. During the gap before <code>_start_level_intro</code> runs, input handling reads a stale <code>TITLE</code> value that main.gd never actually uses. An input arriving in this window (unlikely but possible on fast machines) could match no branch and silently no-op.</p>
+      <div class="fix-label">Fix</div>
+      <pre>var phase: GameState.Phase = GameState.Phase.LEVEL_INTRO</pre>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head">
+      <span class="sev sev-low">Low</span>
+      <span class="finding-title">Redundant <code>RunState</code> reset in title screen</span>
+    </div>
+    <div class="finding-body">
+      <span class="file-badge">ui/title_screen.gd</span>
+      <p><code>RunState.reset()</code> already sets <code>start_level = 1</code>, making the next line a no-op. Minor but confusing if someone changes <code>reset()</code> in the future.</p>
+      <pre>func _start_game() -> void:
+    RunState.reset()
+    RunState.start_level = 1  # redundant — reset() already does this</pre>
+      <div class="fix-label">Fix — remove the second line</div>
+      <pre>func _start_game() -> void:
+    RunState.reset()
+    get_tree().change_scene_to_file("res://main.tscn")</pre>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head">
+      <span class="sev sev-low">Low</span>
+      <span class="finding-title">Pause toggle restores incorrect phase when unpausing with a waiting ball</span>
+    </div>
+    <div class="finding-body">
+      <span class="file-badge">main.gd</span>
+      <p>Unpausing correctly determines <code>READY</code> vs <code>PLAYING</code>, but <code>show_aim</code> isn't re-set when unpausing into <code>READY</code>. The aim indicator stays hidden if the player paused mid-READY phase.</p>
+      <div class="fix-label">Fix</div>
+      <pre>get_tree().paused = false
+if _get_waiting_ball() != null:
+    phase = GameState.Phase.READY
+    paddle.show_aim = true      # restore aim lines
+else:
+    phase = GameState.Phase.PLAYING
+hud.show_pause(false)</pre>
+    </div>
+  </div>
+
+  <div class="section-head">
+    <i class="ti ti-gamepad-2" style="color: #185FA5;" aria-hidden="true"></i>
+    <h3>Play mechanics</h3>
+    <span class="count">5 findings</span>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head">
+      <span class="sev sev-high">High</span>
+      <span class="finding-title">Double-coloring standard bricks: <code>modulate</code> and <code>sprite.color</code> both set to <code>row_color</code></span>
+    </div>
+    <div class="finding-body">
+      <span class="file-badge">game/level_builder.gd</span><span class="file-badge" style="margin-left:6px">entities/brick.gd</span>
+      <p>In <code>level_builder.gd</code>, <code>brick.modulate = ROW_COLORS[row]</code> is set, and then <code>_update_visual()</code> in <code>brick.gd</code> also sets <code>_sprite.color = row_color</code>. Godot multiplies these: a cyan sprite (R=0.2, G=1.0, B=1.0) under a cyan modulate renders as (0.04, 1.0, 1.0) — a washed-out, over-saturated teal. Neon colors lose their intended hue.</p>
+      <pre># level_builder.gd — line ~50
+if brick_type == "standard":
+    brick.modulate = ROW_COLORS[row]   # sets whole node modulate
+# then brick.gd _update_visual() runs:
+_sprite.color = row_color              # also sets the sprite — they compound!</pre>
+      <div class="fix-label">Fix — remove the modulate assignment from level_builder; brick.gd owns coloring</div>
+      <pre># level_builder.gd — just set row_color export, nothing else
+brick.row_color = ROW_COLORS[row]
+# remove: brick.modulate = ROW_COLORS[row]</pre>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head">
+      <span class="sev sev-med">Medium</span>
+      <span class="finding-title">Standard brick alpha fade is dead code</span>
+    </div>
+    <div class="finding-body">
+      <span class="file-badge">entities/brick.gd</span>
+      <p>The alpha fade in <code>_update_visual()</code> only fires for <code>brick_type == "standard"</code>. Standard bricks have 1 HP, so <code>max_hp - _hp</code> is always 0 until the brick is destroyed (at which point it's freed). The visual never shows. Meanwhile, metal and boss bricks (where this could look great) are handled by their own match branches which skip this code entirely.</p>
+      <pre>if brick_type == "standard":
+    var alpha := 1.0 - float(max_hp - _hp) / max_hp * 0.4
+    modulate.a = alpha   # fires, but _hp is always max_hp for 1-HP bricks</pre>
+      <div class="fix-label">Fix — move fade to metal/boss, or add multi-HP standard bricks; as-is, remove or guard it</div>
+      <pre># For metal bricks, add in their match branch:
+"metal":
+    ...
+    var alpha := 1.0 - float(max_hp - _hp) / float(max_hp) * 0.45
+    modulate.a = clampf(alpha, 0.55, 1.0)</pre>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head">
+      <span class="sev sev-med">Medium</span>
+      <span class="finding-title">Powerup drop cooldown blocks all drops globally, even on distinct bricks</span>
+    </div>
+    <div class="finding-body">
+      <span class="file-badge">main.gd</span>
+      <p>The 2-second global cooldown in <code>_spawn_powerup</code> prevents drops from any brick within that window. When a multiball chain destroys several bricks in quick succession, players are effectively penalized for being good — the extra balls that earned those kills get no reward. The cooldown's intent (prevent drop spam on one destruction event) is right, but the scope is too wide.</p>
+      <pre>if now - _last_powerup_drop_time &lt; 2.0:
+    return   # blocks ALL drops for 2 seconds globally</pre>
+      <div class="fix-label">Option — tighten the window or replace with a probabilistic dampen</div>
+      <pre># Reduce to 0.8s so multiball chains can still reward players across a fight
+if now - _last_powerup_drop_time &lt; 0.8:
+    return</pre>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head">
+      <span class="sev sev-med">Medium</span>
+      <span class="finding-title">Wall boundary doesn't align with paddle movement clamp</span>
+    </div>
+    <div class="finding-body">
+      <span class="file-badge">main.tscn</span><span class="file-badge" style="margin-left:6px">entities/paddle.gd</span>
+      <p>Left wall is a 20px body centered at x=10 (inner edge at x=20). Right wall centered at x=1270 (inner edge at x=1260). The paddle is clamped from <code>target_width/2</code> (50px) to <code>1280 - 50 = 1230px</code>. So the paddle's left edge can reach x=0 — inside the left wall collision shape. The ball bounces off the wall at ~x=28 but the paddle sprite can visually overlap the wall.</p>
+      <div class="fix-label">Fix — align wall inner edges with paddle clamp edges</div>
+      <pre># Paddle clamp uses target_width/2 as margin, so walls should sit at:
+position.x = clamp(position.x, target_width / 2.0 + 10.0,
+                   limit - target_width / 2.0 - 10.0)
+# Or move LeftWall to x=60, RightWall to x=1220 to match the 50px paddle half-width</pre>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head">
+      <span class="sev sev-low">Low</span>
+      <span class="finding-title">Sticky mode: no visual feedback on paddle color change</span>
+    </div>
+    <div class="finding-body">
+      <span class="file-badge">entities/paddle.gd</span>
+      <p>When sticky activates, only the aim-indicator V-lines change. The paddle sprite remains the same cyan. Players have no obvious cue that sticky is active until a ball actually sticks. The HUD timer strip helps, but an in-world signal (color shift, pulse) would make the mode state legible at a glance.</p>
+      <div class="fix-label">Suggested addition to <code>enable_sticky</code> and <code>_disable_sticky</code></div>
+      <pre>func enable_sticky(duration_sec: float = 8.0) -> void:
+    sticky_mode = true
+    sprite.color = Color(1.0, 1.0, 0.4)   # yellow tint = sticky signal
+    _sticky_timer.start(duration_sec)
+    queue_redraw()
+
+func _disable_sticky() -> void:
+    sticky_mode = false
+    sprite.color = Color(0.2, 1.0, 1.0)   # restore cyan
+    ...</pre>
+    </div>
+  </div>
+
+  <div class="section-head">
+    <i class="ti ti-palette" style="color: #533AB7;" aria-hidden="true"></i>
+    <h3>Aesthetics</h3>
+    <span class="count">4 findings</span>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head">
+      <span class="sev sev-med">Medium</span>
+      <span class="finding-title">Particle process materials duplicated per brick at build time, not per-instance</span>
+    </div>
+    <div class="finding-body">
+      <span class="file-badge">game/level_builder.gd</span>
+      <p><code>mat.duplicate()</code> is called inside the brick-build loop, so every brick gets its own material copy. This is correct but also happens in <code>brick.gd _update_visual()</code> for boss/metal bricks where the material is already cached. The paths converge inconsistently: level_builder sets particle colors via a fresh duplicate, while brick.gd sets <code>_sprite.color</code> through a different branch. Metal/boss particle colors are set in <code>_update_visual</code> only, which means level_builder's duplicate call for those types creates materials that are immediately overwritten. Clean this up so level_builder only sets <code>row_color</code> and brick.gd handles all visual state in one place.</p>
+      <div class="fix-label">Fix — remove particle material work from level_builder entirely</div>
+      <pre># level_builder.gd — delete the particle block:
+# var particles := brick.get_node("Particles") as GPUParticles2D
+# if particles:
+#     var mat := ...
+#     mat = mat.duplicate()
+#     particles.process_material = mat
+# brick.gd _ready() already handles this via row_color</pre>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head">
+      <span class="sev sev-med">Medium</span>
+      <span class="finding-title">Power-up capsules are visually flat — no drift or rotation during fall</span>
+    </div>
+    <div class="finding-body">
+      <span class="file-badge">entities/powerup.gd</span>
+      <p>Power-ups fall straight down with only an alpha pulse. A slight horizontal sine-wave drift and slow rotation would make them feel like physical objects and be more immediately legible as collectibles against the static brick field. The alpha pulse alone reads as a UI flicker rather than a "pick me up" invitation.</p>
+      <div class="fix-label">Suggested addition to <code>_physics_process</code></div>
+      <pre">func _physics_process(delta: float) -> void:
+    position.y += fall_speed * delta
+    # gentle sine-wave horizontal drift
+    position.x += sin(Time.get_ticks_msec() * 0.003) * 0.8
+    rotation += delta * 1.2   # slow rotation, ~69°/sec
+    if position.y > get_viewport_rect().size.y + 50:
+        queue_free()</pre>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head">
+      <span class="sev sev-med">Medium</span>
+      <span class="finding-title">Boss bricks: glow shader center-point conflicts with pulsing scale animation</span>
+    </div>
+    <div class="finding-body">
+      <span class="file-badge">entities/brick.gd</span><span class="file-badge" style="margin-left:6px">shaders/brick_glow.gdshader</span>
+      <p>The scale pulse tween (1.0→1.08→1.0) stretches the brick node but the glow shader computes <code>edge</code> from UV coordinates, which stay fixed. As the brick scales up, the glow "moves" inward relative to the physical edge — the center-bright effect becomes inconsistent with the visible border. At 1.08× scale with a 24px tall brick, the mismatch is small but creates a shimmer artifact on the outermost pixels during the pulse peak.</p>
+      <div class="fix-label">Option A — animate shader <code>glow_intensity</code> instead of node scale</div>
+      <pre>if is_boss:
+    var tween := create_tween().set_loops()
+    tween.tween_method(
+        func(v): _shader_mat.set_shader_parameter("glow_intensity", v),
+        1.5, 3.0, 0.6)
+    tween.tween_method(
+        func(v): _shader_mat.set_shader_parameter("glow_intensity", v),
+        3.0, 1.5, 0.6)</pre>
+    </div>
+  </div>
+
+  <div class="finding">
+    <div class="finding-head">
+      <span class="sev sev-low">Low</span>
+      <span class="finding-title">HUD effect timer bars have no minimum visible fill as they approach zero</span>
+    </div>
+    <div class="finding-body">
+      <span class="file-badge">ui/hud.gd</span>
+      <p>The <code>ProgressBar</code> tween goes from <code>duration_sec</code> to <code>0.0</code> linearly, meaning the bar silently disappears when empty. A short "final flash" or color-shift in the last second (e.g. bar turns red/amber) would give the player a clear warning before the effect ends rather than a sudden vanish. The current clear-on-complete callback also removes the row immediately with no exit animation.</p>
+      <div class="fix-label">Suggested — pulse bar color when &lt;2s remain</div>
+      <pre">func set_effect_timer(...) -> void:
+    ...
+    var new_tween := create_tween()
+    new_tween.tween_property(row.bar, "value", 0.0, duration_sec)
+    # when 2s remain, shift bar to warning amber
+    if duration_sec > 2.0:
+        new_tween.parallel().tween_interval(duration_sec - 2.0)
+        new_tween.tween_property(row.bar, "modulate",
+            Color(1.0, 0.7, 0.1), 0.3)
+    new_tween.tween_callback(func(): clear_effect_timer(effect_id))</pre>
+    </div>
+  </div>
+
+</div>

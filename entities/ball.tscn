@@ -1,0 +1,35 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://entities/ball.gd" id="1_h5fn0"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_l8q2b"]
+radius = 8.0
+
+[node name="Ball" type="CharacterBody2D"]
+script = ExtResource("1_h5fn0")
+collision_layer = 2
+collision_mask = 37
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_l8q2b")
+
+
+[node name="VisibleOnScreenNotifier2D" type="VisibleOnScreenNotifier2D" parent="."]
+rect = Rect2(-16, -16, 32, 32)
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_trail"]
+direction = Vector3(0, 1, 0)
+spread = 15.0
+initial_velocity_min = 0.0
+initial_velocity_max = 30.0
+scale_min = 0.3
+scale_max = 0.3
+color = Color(1, 1, 0.6, 0.5)
+
+[node name="Trail" type="GPUParticles2D" parent="."]
+emitting = false
+amount = 20
+one_shot = false
+local_coords = false
+lifetime = 0.35
+process_material = SubResource("ParticleProcessMaterial_trail")

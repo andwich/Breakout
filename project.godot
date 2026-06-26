@@ -1,0 +1,60 @@
+[application]
+config/name="Breakout"
+config/description="Modern Breakout game inspired by Atari's classic"
+run/main_scene="res://ui/title_screen.tscn"
+
+[display]
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/size/initial_position_type=1
+window/size/window_width_override=1280
+window/size/window_height_override=720
+window/dpi/allow_hidpi=true
+
+[rendering]
+textures/canvas_textures/default_texture_filter=0
+2d/sdf/oversizing=1.0
+
+[input]
+click={
+"deadzone": 0.5,
+"events": [Object(InputEventMouseButton,"button_index":1,"button_mask":0,"position":Vector2(0,0),"global_position":Vector2(0,0),"factor":1.0,"button_previous":0,"pressed":false,"script":null)
+]
+}
+move_left={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"keycode":65,"physical_keycode":0,"key_label":0,"unicode":0,"location":0,"modifier_keys":[],"pressed":false,"echo":false,"script":null)
+, Object(InputEventKey,"keycode":16777231,"physical_keycode":0,"key_label":0,"unicode":0,"location":0,"modifier_keys":[],"pressed":false,"echo":false,"script":null)
+]
+}
+move_right={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"keycode":68,"physical_keycode":0,"key_label":0,"unicode":0,"location":0,"modifier_keys":[],"pressed":false,"echo":false,"script":null)
+, Object(InputEventKey,"keycode":16777233,"physical_keycode":0,"key_label":0,"unicode":0,"location":0,"modifier_keys":[],"pressed":false,"echo":false,"script":null)
+]
+}
+ui_cancel={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"keycode":16777217,"physical_keycode":0,"key_label":0,"unicode":0,"location":0,"modifier_keys":[],"pressed":false,"echo":false,"script":null)
+]
+}
+
+[physics]
+
+[physics/common]
+2d/solver/solver_type=0
+
+[autoload]
+GameTheme="*res://autoload/game_theme.gd"
+RunState="*res://autoload/run_state.gd"
+SaveData="*res://autoload/save_data.gd"
+ScreenTransition="*res://autoload/screen_transition.gd"
+AudioManager="*res://autoload/audio_manager.gd"
+
+[physics/2d]
+layer_names/1="paddle"
+layer_names/2="ball"
+layer_names/3="brick"
+layer_names/4="powerup"
+layer_names/5="laser"
+layer_names/6="wall"

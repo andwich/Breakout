@@ -1,0 +1,125 @@
+
+<style>
+  .review-grid { padding: 1rem 0; display: flex; flex-direction: column; gap: 12px; }
+  .section-head { font-size: 12px; font-weight: 500; color: var(--color-text-tertiary); text-transform: uppercase; letter-spacing: 0.07em; margin: 8px 0 4px; }
+  .item { display: flex; gap: 12px; align-items: flex-start; padding: 10px 14px; border-radius: var(--border-radius-md); background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); }
+  .badge { flex-shrink: 0; font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 99px; margin-top: 2px; }
+  .badge-bug { background: #FCEBEB; color: #791F1F; }
+  .badge-warn { background: #FAEEDA; color: #633806; }
+  .badge-polish { background: #E6F1FB; color: #0C447C; }
+  @media (prefers-color-scheme: dark) {
+    .badge-bug { background: #501313; color: #F7C1C1; }
+    .badge-warn { background: #412402; color: #FAC775; }
+    .badge-polish { background: #042C53; color: #B5D4F4; }
+  }
+  .item-body { flex: 1; }
+  .item-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 3px; }
+  .item-desc { font-size: 13px; color: var(--color-text-secondary); line-height: 1.5; }
+  .file-tag { display: inline-block; font-size: 11px; font-family: var(--font-mono); background: var(--color-background-tertiary); border: 0.5px solid var(--color-border-tertiary); border-radius: 4px; padding: 1px 6px; color: var(--color-text-secondary); margin-top: 4px; }
+</style>
+<div class="review-grid">
+  <div class="section-head">Bugs — runtime errors</div>
+
+  <div class="item">
+    <span class="badge badge-bug">bug</span>
+    <div class="item-body">
+      <div class="item-title"><code>cols</code> variable out of scope in <code>_configure_brick</code></div>
+      <div class="item-desc">References <code>cols</code> (local to <code>build_level</code>) for boss placement. Causes a runtime crash. Fix: read <code>config["cols"]</code> inside the method.</div>
+      <div class="file-tag">level_builder.gd:44</div>
+    </div>
+  </div>
+
+  <div class="item">
+    <span class="badge badge-bug">bug</span>
+    <div class="item-body">
+      <div class="item-title">Laser collision mask hits paddle, not bricks</div>
+      <div class="item-desc"><code>collision_mask = 5</code> targets layers 1 (paddle) + 3 (brick). Should be <code>collision_mask = 4</code> for layer 3 (brick) only. Lasers can inadvertently collide with the paddle.</div>
+      <div class="file-tag">laser_beam.tscn</div>
+    </div>
+  </div>
+
+  <div class="item">
+    <span class="badge badge-bug">bug</span>
+    <div class="item-body">
+      <div class="item-title"><code>complete_level</code> double-fire race</div>
+      <div class="item-desc">Simultaneous ball + laser destruction can call <code>complete_level</code> twice, incrementing <code>current_level</code> twice. Add a phase guard before the await.</div>
+      <div class="file-tag">main.gd:_on_brick_destroyed</div>
+    </div>
+  </div>
+
+  <div class="section-head">Gameplay — mechanics feel</div>
+
+  <div class="item">
+    <span class="badge badge-warn">mechanic</span>
+    <div class="item-body">
+      <div class="item-title">Speed clamping discards velocity variation</div>
+      <div class="item-desc">After paddle reflection, <code>velocity.normalized() * speed</code> resets to constant speed, cancelling any energy added from aim bias. Consider preserving speed variation for more dynamic ball feel.</div>
+      <div class="file-tag">ball.gd:56</div>
+    </div>
+  </div>
+
+  <div class="item">
+    <span class="badge badge-warn">mechanic</span>
+    <div class="item-body">
+      <div class="item-title">Slow-ball speed not applied to balls spawned during slow period</div>
+      <div class="item-desc">Balls spawned by multiball while <code>_slow_timer</code> is running get full speed. Only pre-existing balls are in <code>_original_ball_speeds</code>. Check timer state in <code>spawn_ball</code>.</div>
+      <div class="file-tag">main.gd:_apply_slow_balls</div>
+    </div>
+  </div>
+
+  <div class="item">
+    <span class="badge badge-warn">mechanic</span>
+    <div class="item-body">
+      <div class="item-title">Lives HUD hard-capped at 5 hearts</div>
+      <div class="item-desc">Extra Life powerup can push lives above 5, but only 5 heart nodes exist. 6th+ lives are silent. Dynamically add heart labels or add an overflow counter.</div>
+      <div class="file-tag">hud.tscn / hud.gd:update_lives</div>
+    </div>
+  </div>
+
+  <div class="section-head">Aesthetics — visual polish</div>
+
+  <div class="item">
+    <span class="badge badge-polish">aesthetic</span>
+    <div class="item-body">
+      <div class="item-title">Glow shader ineffective on <code>ColorRect</code></div>
+      <div class="item-desc"><code>brick_glow.gdshader</code> samples <code>TEXTURE</code> UV offsets, but <code>ColorRect</code> has no texture — the effect is a flat color blend, not a glow. Use UV-distance edge glow logic, or switch to <code>TextureRect</code> with a small base sprite.</div>
+      <div class="file-tag">brick_glow.gdshader / brick.gd</div>
+    </div>
+  </div>
+
+  <div class="item">
+    <span class="badge badge-polish">aesthetic</span>
+    <div class="item-body">
+      <div class="item-title">Ball trail nearly invisible at speed</div>
+      <div class="item-desc"><code>spread = 5.0</code> and <code>lifetime = 0.2</code> are too tight. Suggest <code>spread = 15.0</code>, <code>lifetime = 0.35</code>, and matching the neon yellow ball color with higher alpha (<code>0.5</code>).</div>
+      <div class="file-tag">ball.tscn:Trail</div>
+    </div>
+  </div>
+
+  <div class="item">
+    <span class="badge badge-polish">aesthetic</span>
+    <div class="item-body">
+      <div class="item-title">Boss/metal bricks fade transparent at low HP</div>
+      <div class="item-desc">The alpha damage indicator (<code>modulate.a</code>) applies to all brick types. Boss bricks at 1 HP become 60% transparent — looking weaker than fresh standard bricks. Restrict fade to <code>brick_type == "standard"</code>.</div>
+      <div class="file-tag">brick.gd:_update_visual</div>
+    </div>
+  </div>
+
+  <div class="item">
+    <span class="badge badge-polish">aesthetic</span>
+    <div class="item-body">
+      <div class="item-title">No aim indicator at ball launch</div>
+      <div class="item-desc">Aim lines in <code>paddle.gd:_draw()</code> only appear in sticky mode. Showing faint aim lines during the READY phase too would dramatically improve pre-launch feedback.</div>
+      <div class="file-tag">paddle.gd:_draw</div>
+    </div>
+  </div>
+
+  <div class="item">
+    <span class="badge badge-polish">aesthetic</span>
+    <div class="item-body">
+      <div class="item-title">Flat background — no retro texture</div>
+      <div class="item-desc">The neon-on-dark aesthetic would benefit from a subtle background scanline or dot grid overlay. A full-screen <code>ColorRect</code> with the scanline shader at 5–10% intensity would strengthen the retro feel without distraction.</div>
+      <div class="file-tag">main.tscn / main.gd:_ready</div>
+    </div>
+  </div>
+</div>

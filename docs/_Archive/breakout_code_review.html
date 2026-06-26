@@ -1,0 +1,174 @@
+
+<style>
+  body { margin: 0; padding: 0; }
+  .wrap { padding: 16px 0 8px; font-family: var(--font-sans); }
+  .section { margin-bottom: 20px; }
+  .section-title { font-size: 11px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--color-text-tertiary); margin: 0 0 8px; padding: 0 4px; }
+  .card { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: var(--border-radius-md); border: 1px solid var(--color-border-tertiary); margin-bottom: 6px; background: var(--color-background-secondary); cursor: default; transition: background .15s; }
+  .card:hover { background: var(--color-background-tertiary); }
+  .badge { flex-shrink: 0; font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 10px; margin-top: 1px; }
+  .b-red { background: var(--color-background-danger); color: var(--color-text-danger); }
+  .b-amber { background: #faeeda; color: #854f0b; }
+  .b-blue { background: var(--color-background-info); color: var(--color-text-info); }
+  @media (prefers-color-scheme: dark) {
+    .b-amber { background: #412402; color: #FAC775; }
+  }
+  .num { font-size: 11px; font-weight: 500; color: var(--color-text-tertiary); flex-shrink: 0; width: 18px; margin-top: 2px; }
+  .text { flex: 1; }
+  .title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 2px; }
+  .sub { font-size: 12px; color: var(--color-text-secondary); margin: 0; line-height: 1.5; }
+  .file { font-family: var(--font-mono); font-size: 11px; color: var(--color-text-tertiary); margin-top: 3px; }
+</style>
+<div class="wrap">
+  <div class="section">
+    <p class="section-title">Launch &amp; scene</p>
+
+    <div class="card">
+      <span class="num">1</span>
+      <div class="text">
+        <p class="title">No wall collision bodies</p>
+        <p class="sub">Balls pass through top and side edges — <code>collision_mask=5</code> but no wall StaticBody2D in main.tscn. Top/side exits silently queue_free the ball.</p>
+        <p class="file">main.tscn · ball.gd _on_screen_exited</p>
+      </div>
+      <span class="badge b-red">Critical</span>
+    </div>
+
+    <div class="card">
+      <span class="num">2</span>
+      <div class="text">
+        <p class="title">Pause/unpause permanently broken</p>
+        <p class="sub">Guard <code>phase == PAUSED → return</code> blocks unpausing. Once paused, Escape does nothing. PAUSED phase is also re-used for level transitions, creating the conflict.</p>
+        <p class="file">main.gd _toggle_pause()</p>
+      </div>
+      <span class="badge b-red">Critical</span>
+    </div>
+
+    <div class="card">
+      <span class="num">3</span>
+      <div class="text">
+        <p class="title">Paddle sprite doesn't resize on big-paddle</p>
+        <p class="sub"><code>sprite.size.x = target_width</code> has no effect on offset-based Controls. Collision shape grows but visual stays the same width. Fix: set <code>sprite.offset_left / offset_right</code>.</p>
+        <p class="file">paddle.gd apply_big_paddle() · _reset_paddle_width()</p>
+      </div>
+      <span class="badge b-red">Critical</span>
+    </div>
+
+    <div class="card">
+      <span class="num">4</span>
+      <div class="text">
+        <p class="title">PAUSED phase conflated with level transition</p>
+        <p class="sub">complete_level() sets <code>phase = PAUSED</code> but doesn't pause the tree. This shares state with player pause, making both harder to reason about. Add a <code>_transitioning</code> flag instead.</p>
+        <p class="file">main.gd complete_level()</p>
+      </div>
+      <span class="badge b-amber">Significant</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <p class="section-title">Play mechanisms</p>
+
+    <div class="card">
+      <span class="num">5</span>
+      <div class="text">
+        <p class="title">Y-clamping diluted by subsequent normalization</p>
+        <p class="sub">_clamp_min_speed() sets velocity.y ≥ 50, but the next line <code>velocity = velocity.normalized() * speed</code> re-scales it down below 50 again on shallow angles.</p>
+        <p class="file">ball.gd _physics_process · _clamp_min_speed()</p>
+      </div>
+      <span class="badge b-red">Critical</span>
+    </div>
+
+    <div class="card">
+      <span class="num">6</span>
+      <div class="text">
+        <p class="title">signf(0.0) = 0 — perfectly horizontal ball locks</p>
+        <p class="sub">If velocity.y is exactly 0, <code>signf(0.0) * 50 = 0</code>. The ball stays horizontal forever. Use <code>50.0 if velocity.y >= 0 else -50.0</code>.</p>
+        <p class="file">ball.gd _clamp_min_speed()</p>
+      </div>
+      <span class="badge b-red">Critical</span>
+    </div>
+
+    <div class="card">
+      <span class="num">7</span>
+      <div class="text">
+        <p class="title">Multiball spawns 1 clone, readme says 2</p>
+        <p class="sub">The loop iterates active balls once, spawning one clone each. With one ball you get two total, not three. Add an inner loop or adjust the readme.</p>
+        <p class="file">main.gd _on_powerup_collected MULTIBALL</p>
+      </div>
+      <span class="badge b-amber">Significant</span>
+    </div>
+
+    <div class="card">
+      <span class="num">8</span>
+      <div class="text">
+        <p class="title">Laser scoring uses get_parent() — fragile coupling</p>
+        <p class="sub">Contradicts the project's own design rule (agents.md: "Avoid get_parent() for core gameplay"). Breaks if LaserManager ever moves in the tree. Emit <code>brick_scored(int)</code> instead.</p>
+        <p class="file">laser_manager.gd _fire_laser()</p>
+      </div>
+      <span class="badge b-amber">Significant</span>
+    </div>
+
+    <div class="card">
+      <span class="num">9</span>
+      <div class="text">
+        <p class="title">show_level_complete() takes false as a sentinel</p>
+        <p class="sub">Untyped param, relies on <code>== false</code> comparison. Should be <code>show_level_complete(show: bool, level: int = 0)</code>.</p>
+        <p class="file">ui/hud.gd</p>
+      </div>
+      <span class="badge b-blue">Minor</span>
+    </div>
+
+    <div class="card">
+      <span class="num">10</span>
+      <div class="text">
+        <p class="title">victory.gd hardcodes level 6</p>
+        <p class="sub"><code>RunState.start_level = 6</code> should be <code>LevelDefs.base_levels().size() + 1</code>. Adding a 6th base level silently breaks endless entry.</p>
+        <p class="file">ui/victory.gd start_endless()</p>
+      </div>
+      <span class="badge b-blue">Minor</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <p class="section-title">Aesthetic</p>
+
+    <div class="card">
+      <span class="num">11</span>
+      <div class="text">
+        <p class="title">Ball is a yellow square</p>
+        <p class="sub">ColorRect node renders a 16×16 square. The collision shape is circular but the sprite isn't. Use <code>draw_circle()</code> in _draw() and remove the ColorRect child.</p>
+        <p class="file">entities/ball.tscn · ball.gd</p>
+      </div>
+      <span class="badge b-amber">Significant</span>
+    </div>
+
+    <div class="card">
+      <span class="num">12</span>
+      <div class="text">
+        <p class="title">Brick glow shader still glows at edges, not center</p>
+        <p class="sub">Retro_0505 claims this was fixed but current code: <code>glow = 1.0 - smoothstep(0, 0.4, edge)</code> = 1 at edge, 0 at center. Remove the <code>1.0 -</code> inversion.</p>
+        <p class="file">shaders/brick_glow.gdshader</p>
+      </div>
+      <span class="badge b-amber">Significant</span>
+    </div>
+
+    <div class="card">
+      <span class="num">13</span>
+      <div class="text">
+        <p class="title">No playfield boundary visual</p>
+        <p class="sub">Without a visible border, players can't tell where the ball should bounce. A faint 1px neon rect matching the viewport edges would anchor the play area.</p>
+        <p class="file">main.tscn BackgroundOverlay</p>
+      </div>
+      <span class="badge b-blue">Minor</span>
+    </div>
+
+    <div class="card">
+      <span class="num">14</span>
+      <div class="text">
+        <p class="title">Active power-up label missing from HUD</p>
+        <p class="sub">Progress bar shows timer but no name. Players can't tell which effect is expiring. Add a short label ("LASER 8s") next to PowerupProgress.</p>
+        <p class="file">ui/hud.tscn · hud.gd start_powerup_timer()</p>
+      </div>
+      <span class="badge b-blue">Minor</span>
+    </div>
+  </div>
+</div>

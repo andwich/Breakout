@@ -1,0 +1,184 @@
+
+<style>
+.wrap{padding:12px 0 4px;font-family:var(--font-sans)}
+.sec{margin-bottom:18px}
+.sec-title{font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--color-text-tertiary);margin:0 0 8px;padding:0 2px}
+.card{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:8px;border:1px solid var(--color-border-tertiary);margin-bottom:5px;background:var(--color-background-secondary)}
+.num{font-size:11px;font-weight:500;color:var(--color-text-tertiary);flex-shrink:0;width:18px;margin-top:2px}
+.text{flex:1;min-width:0}
+.title{font-size:13px;font-weight:500;color:var(--color-text-primary);margin:0 0 2px}
+.sub{font-size:12px;color:var(--color-text-secondary);margin:0;line-height:1.55}
+.file{font-family:var(--font-mono);font-size:11px;color:var(--color-text-tertiary);margin-top:3px}
+.badge{flex-shrink:0;font-size:10px;font-weight:500;padding:2px 7px;border-radius:10px;margin-top:1px}
+.b-red{background:var(--color-background-danger);color:var(--color-text-danger)}
+.b-amber{background:#faeeda;color:#854f0b}
+.b-blue{background:var(--color-background-info);color:var(--color-text-info)}
+@media(prefers-color-scheme:dark){.b-amber{background:#412402;color:#FAC775}}
+</style>
+<div class="wrap">
+
+<div class="sec">
+<p class="sec-title">Play mechanisms</p>
+
+<div class="card">
+  <span class="num">1</span>
+  <div class="text">
+    <p class="title">Velocity clamp → renormalize → clamp loop never converges</p>
+    <p class="sub">After Y is clamped and renormalized, X is clamped and renormalized again — which shrinks Y back below 50. Each pass undoes the previous one. Fix: clamp both components once, after a single normalization, without renormalizing again.</p>
+    <p class="file">entities/ball.gd _physics_process (bounce branch)</p>
+  </div>
+  <span class="badge b-red">Critical</span>
+</div>
+
+<div class="card">
+  <span class="num">2</span>
+  <div class="text">
+    <p class="title">complete_level() can fire twice during 1.8s transition</p>
+    <p class="sub">The guard checks <code>phase != PLAYING</code>, but phase stays PLAYING during the await. If two bricks are destroyed in the same tick (ball + laser), brick_count hits 0 twice and complete_level is called a second time before the first await yields. Add <code>_transitioning</code> to the guard.</p>
+    <p class="file">main.gd complete_level()</p>
+  </div>
+  <span class="badge b-red">Critical</span>
+</div>
+
+<div class="card">
+  <span class="num">3</span>
+  <div class="text">
+    <p class="title">Ball scores only on destroy — multi-HP bricks feel unresponsive</p>
+    <p class="sub"><code>brick_hit.emit</code> is gated on <code>is_queued_for_deletion()</code>, so standard ball hits on metal/boss bricks give zero score feedback. Laser awards 5 pts per hit; ball gives nothing. Even a small per-hit award (1–2 pts) would close the asymmetry and give feedback.</p>
+    <p class="file">entities/ball.gd _physics_process, vs laser_manager.gd</p>
+  </div>
+  <span class="badge b-amber">Significant</span>
+</div>
+
+<div class="card">
+  <span class="num">4</span>
+  <div class="text">
+    <p class="title">Multiball clones miss brick_hit connection</p>
+    <p class="sub"><code>spawn_ball()</code> wires <code>brick_hit</code> and <code>life_lost</code> correctly. But the multiball path sets <code>clone.launched = true</code> and velocity directly, bypassing <code>Ball.launch()</code> — so the clone never follows the sticky paddle check. Low risk now, but if a sticky is active when multiball fires, the stuck ball's launch logic mismatches.</p>
+    <p class="file">main.gd _on_powerup_collected MULTIBALL</p>
+  </div>
+  <span class="badge b-amber">Significant</span>
+</div>
+
+<div class="card">
+  <span class="num">5</span>
+  <div class="text">
+    <p class="title">_on_ball_lost lives can go below zero</p>
+    <p class="sub">If multiple balls exit near-simultaneously, <code>has_active_ball()</code> may return false for each, decrementing lives more than once. Clamping to <code>max(0, lives - 1)</code> or adding a guard flag prevents a negative-life game-over cascade.</p>
+    <p class="file">main.gd _on_ball_lost</p>
+  </div>
+  <span class="badge b-amber">Significant</span>
+</div>
+
+<div class="card">
+  <span class="num">6</span>
+  <div class="text">
+    <p class="title">Laser lambda captures freed node</p>
+    <p class="sub">The <code>body_entered</code> lambda calls <code>laser.queue_free()</code> then reads <code>body.is_queued_for_deletion()</code> and <code>body.point_value</code> after. If the brick is also freeing in the same frame, <code>body.point_value</code> is read from a freed object. Use a local <code>var pts = body.point_value</code> before any <code>queue_free()</code> call.</p>
+    <p class="file">entities/laser_manager.gd _fire_laser lambda</p>
+  </div>
+  <span class="badge b-amber">Significant</span>
+</div>
+
+<div class="card">
+  <span class="num">7</span>
+  <div class="text">
+    <p class="title">has_method("take_damage") check is dead code</p>
+    <p class="sub">Every Brick always has <code>take_damage</code>, so the else branch (<code>collider.destroy()</code>) never runs. The check adds noise and could hide bugs if a non-Brick body somehow passes the <code>is Brick</code> check. Remove the conditional; call <code>take_damage</code> directly.</p>
+    <p class="file">entities/ball.gd, entities/laser_manager.gd</p>
+  </div>
+  <span class="badge b-blue">Minor</span>
+</div>
+
+</div>
+
+<div class="sec">
+<p class="sec-title">Launch / scene</p>
+
+<div class="card">
+  <span class="num">8</span>
+  <div class="text">
+    <p class="title">Wall collision shapes are centered on edge, not inside</p>
+    <p class="sub">LeftWall at <code>position = (0, 360)</code> with a 20px wide shape spans x = −10 to x = 10. Half the wall body is off-screen. A ball at x=8 could be on-screen but past the collision edge. Move each wall inward by half its thickness: LeftWall → x=10, RightWall → x=1270, TopWall → y=10.</p>
+    <p class="file">main.tscn LeftWall / RightWall / TopWall positions</p>
+  </div>
+  <span class="badge b-amber">Significant</span>
+</div>
+
+<div class="card">
+  <span class="num">9</span>
+  <div class="text">
+    <p class="title">Bricks freed mid-level may fire destroyed signal after reset</p>
+    <p class="sub"><code>_reset_round_nodes()</code> calls <code>queue_free()</code> on all bricks, but if a brick already called <code>destroy()</code> that frame, its <code>destroyed</code> signal is still in the queue. When it fires, <code>_on_brick_destroyed</code> decrements brick_count (clamped to 0) and calls <code>complete_level()</code> on the new level's bricks. Guard: check <code>_transitioning</code> in <code>_on_brick_destroyed</code>.</p>
+    <p class="file">main.gd _reset_round_nodes, _on_brick_destroyed</p>
+  </div>
+  <span class="badge b-amber">Significant</span>
+</div>
+
+<div class="card">
+  <span class="num">10</span>
+  <div class="text">
+    <p class="title">Ball VisibleOnScreenNotifier fires even when walls contain the ball</p>
+    <p class="sub">With walls in place the ball should never exit sides or top, but the notifier still calls <code>queue_free()</code> on any screen exit — no life penalty. Consider disconnecting the notifier for non-bottom exits entirely, or adding a specific bottom-only guard before the free.</p>
+    <p class="file">entities/ball.gd _on_screen_exited</p>
+  </div>
+  <span class="badge b-blue">Minor</span>
+</div>
+
+</div>
+
+<div class="sec">
+<p class="sec-title">Aesthetic</p>
+
+<div class="card">
+  <span class="num">11</span>
+  <div class="text">
+    <p class="title">Trail particles always travel downward, ignoring ball direction</p>
+    <p class="sub">The GPUParticles2D direction is (0,1,0) in world space. Particles go down regardless of ball velocity — a ball moving upward shows its trail ahead of it, not behind. Set <code>local_coords = true</code> and direction to (0,1,0) relative to ball, or update direction in <code>_physics_process</code> to match <code>-velocity.normalized()</code> as a 3D vector.</p>
+    <p class="file">entities/ball.tscn Trail ParticleProcessMaterial</p>
+  </div>
+  <span class="badge b-red">Critical</span>
+</div>
+
+<div class="card">
+  <span class="num">12</span>
+  <div class="text">
+    <p class="title">victory.tscn — HighScoreLabel visible by default with empty text</p>
+    <p class="sub">The node has no <code>visible = false</code> in the tscn, so on first launch (no saved score) it renders an empty label that takes up layout space. <code>victory.gd</code> only sets visibility when <code>high > 0</code>. Add <code>visible = false</code> to the tscn node, or guard <code>high_score_label.visible = false</code> at the start of <code>_ready()</code>.</p>
+    <p class="file">ui/victory.tscn HighScoreLabel, ui/victory.gd _ready()</p>
+  </div>
+  <span class="badge b-amber">Significant</span>
+</div>
+
+<div class="card">
+  <span class="num">13</span>
+  <div class="text">
+    <p class="title">Aim indicator only shows when moving — invisible in static ready state</p>
+    <p class="sub">The paddle's <code>_draw()</code> checks <code>absf(aim_angle) > 2.0</code>, so a stationary paddle shows no launch guide. Players launching straight up get no visual cue. Show a default vertical guide (angle = 0) whenever <code>phase == READY</code> and a ball is waiting.</p>
+    <p class="file">entities/paddle.gd _draw()</p>
+  </div>
+  <span class="badge b-amber">Significant</span>
+</div>
+
+<div class="card">
+  <span class="num">14</span>
+  <div class="text">
+    <p class="title">Ball _draw() uses no queue_redraw() — circle is drawn once</p>
+    <p class="sub">Godot calls <code>_draw()</code> once at scene start and caches it. Since the circle never changes, this is actually fine visually. But note: if you ever add dynamic color (e.g. flash on damage), you'll need <code>queue_redraw()</code> after the state change. Worth a comment in code to avoid future confusion.</p>
+    <p class="file">entities/ball.gd _draw()</p>
+  </div>
+  <span class="badge b-blue">Minor</span>
+</div>
+
+<div class="card">
+  <span class="num">15</span>
+  <div class="text">
+    <p class="title">No score flash or sound hook on brick hit</p>
+    <p class="sub"><code>_on_brick_hit</code> silently increments score with no screen feedback. A brief score-delta popup (<code>+10</code> floating upward from the brick) and/or a placeholder AudioStreamPlayer call would make every hit feel rewarding. Even an empty AudioStreamPlayer node wired to <code>_on_brick_hit</code> keeps the hook in place for SFX later.</p>
+    <p class="file">main.gd _on_brick_hit, ui/hud.gd</p>
+  </div>
+  <span class="badge b-blue">Minor</span>
+</div>
+
+</div>
+</div>

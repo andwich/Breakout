@@ -1,0 +1,126 @@
+<style>
+h2.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.wrap{padding:12px 0 4px;font-family:var(--font-sans)}
+.sec{margin-bottom:20px}
+.sec-title{font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--color-text-tertiary);margin:0 0 8px;padding:0 2px}
+.card{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:8px;border:1px solid var(--color-border-tertiary);margin-bottom:5px;background:var(--color-background-secondary)}
+.num{font-size:11px;font-weight:500;color:var(--color-text-tertiary);flex-shrink:0;width:18px;margin-top:2px}
+.text{flex:1;min-width:0}
+.title{font-size:13px;font-weight:500;color:var(--color-text-primary);margin:0 0 2px}
+.sub{font-size:12px;color:var(--color-text-secondary);margin:0;line-height:1.55}
+.file{font-family:var(--font-mono);font-size:11px;color:var(--color-text-tertiary);margin-top:3px}
+.badge{flex-shrink:0;font-size:10px;font-weight:500;padding:2px 7px;border-radius:10px;margin-top:1px}
+.b-red{background:var(--color-background-danger);color:var(--color-text-danger)}
+.b-amber{background:#faeeda;color:#854f0b}
+.b-blue{background:var(--color-background-info);color:var(--color-text-info)}
+@media(prefers-color-scheme:dark){.b-amber{background:#412402;color:#FAC775}}
+code{font-family:var(--font-mono);font-size:11px;background:var(--color-background-tertiary);padding:1px 4px;border-radius:3px}
+</style>
+<div class="wrap">
+<h2 class="sr-only">Breakout code review — 9 issues across play mechanics, scene launch, and aesthetics</h2>
+
+<div class="sec">
+<p class="sec-title">Play mechanisms</p>
+
+<div class="card">
+  <span class="num">1</span>
+  <div class="text">
+    <p class="title">_on_ball_lost can trigger _enter_game_over multiple times</p>
+    <p class="sub">If two balls exit the bottom in the same frame, both fire <code>life_lost</code>. <code>_has_active_ball()</code> returns false for each before either processes, so lives is decremented twice and <code>_enter_game_over</code> is called twice. <code>max(0, lives - 1)</code> prevents negative lives but doesn't guard the double game-over call. Add a guard: if <code>phase == GameState.Phase.GAME_OVER: return</code> at the top of <code>_on_ball_lost</code>.</p>
+    <p class="file">main.gd _on_ball_lost()</p>
+  </div>
+  <span class="badge b-red">Critical</span>
+</div>
+
+<div class="card">
+  <span class="num">2</span>
+  <div class="text">
+    <p class="title">Paddle size and sticky state persist across levels</p>
+    <p class="sub"><code>_load_level()</code> resets position and re-enables processing, but <code>_big_paddle_timer</code> and <code>_sticky_timer</code> keep running from the previous round. When they fire on the new level, <code>_reset_paddle_width()</code> and <code>_disable_sticky()</code> run against stale state. Call <code>paddle._reset_paddle_width()</code> and <code>paddle.stuck_ball = null; paddle.sticky_mode = false</code> (plus stop both timers) at the start of <code>_load_level</code>, or add a <code>reset()</code> method to Paddle.</p>
+    <p class="file">main.gd _load_level() · entities/paddle.gd</p>
+  </div>
+  <span class="badge b-red">Critical</span>
+</div>
+
+<div class="card">
+  <span class="num">3</span>
+  <div class="text">
+    <p class="title">Ball hit on lethal brick double-counts score</p>
+    <p class="sub">When a ball kills a 1-HP brick in a single hit, <code>brick_hit.emit(1)</code> fires first (1 pt), then <code>brick_hit.emit(collider.point_value)</code> fires immediately after because <code>is_queued_for_deletion()</code> is already true. For a standard row-5 brick worth 10 pts, the player gets 11 instead of 10. On higher-HP bricks the two emissions are intentional (per-hit 1 pt + death bonus), but on 1-HP bricks the 1-pt per-hit emission is redundant. Gate the per-hit emit on <code>not collider.is_queued_for_deletion()</code>.</p>
+    <p class="file">entities/ball.gd _physics_process (brick branch)</p>
+  </div>
+  <span class="badge b-amber">Significant</span>
+</div>
+
+<div class="card">
+  <span class="num">4</span>
+  <div class="text">
+    <p class="title">score_sfx.play() with no stream assigned generates errors on every hit</p>
+    <p class="sub"><code>ScoreSfx</code> is an <code>AudioStreamPlayer</code> with no stream set in the scene. Calling <code>play()</code> on it emits a Godot error every brick hit, including the constant per-hit 1-pt awards from laser + metal bricks. Guard with <code>if score_sfx.stream: score_sfx.play()</code>, or remove the call until audio assets exist.</p>
+    <p class="file">main.gd _on_brick_hit() · main.tscn ScoreSfx</p>
+  </div>
+  <span class="badge b-amber">Significant</span>
+</div>
+
+<div class="card">
+  <span class="num">5</span>
+  <div class="text">
+    <p class="title">_clamp_min_speed is called after paddle hits but its normalization can still shrink velocity</p>
+    <p class="sub">The paddle-hit path sets velocity from <code>aim * velocity.length()</code> then calls <code>_clamp_min_speed()</code>. Inside, after clamping components it calls <code>velocity.normalized() * max(cur_speed, 50.0)</code> — if the incoming speed was already below 50 px/s this is fine, but if <code>velocity.length()</code> was, say, 30, the normalise step sets a direction and the clamp re-scales to 50. The real issue is that <code>_clamp_min_speed</code> is now only called from the paddle path; the bounce path has its own inline version without the final normalise. The standalone function's final normalise is harmless but inconsistent with the inline version and could mask edge cases. Unify both paths to use the same logic.</p>
+    <p class="file">entities/ball.gd _clamp_min_speed() vs inline bounce clamp</p>
+  </div>
+  <span class="badge b-blue">Minor</span>
+</div>
+
+</div>
+
+<div class="sec">
+<p class="sec-title">Launch / scene</p>
+
+<div class="card">
+  <span class="num">6</span>
+  <div class="text">
+    <p class="title">_start_level_intro await is unguarded against scene changes</p>
+    <p class="sub">If <code>_start_level_intro()</code> is called and <code>get_tree().change_scene_to_file()</code> fires before its 1.2s timer resolves (e.g. a stale <code>_on_brick_destroyed</code> signal after <code>_load_level</code> clears bricks and fires the signal in the same frame), the resumed coroutine calls <code>hud.hide_level_intro()</code> and <code>_begin_ready_phase()</code> on a partially-freed scene tree. Check <code>is_inside_tree()</code> after each <code>await</code> in both <code>_start_level_intro</code> and <code>_resolve_round_clear</code> before continuing.</p>
+    <p class="file">main.gd _start_level_intro(), _resolve_round_clear()</p>
+  </div>
+  <span class="badge b-amber">Significant</span>
+</div>
+
+<div class="card">
+  <span class="num">7</span>
+  <div class="text">
+    <p class="title">brick.tscn collision_layer is 4 (bitmask) but layer named "powerup" is also 4</p>
+    <p class="sub">In <code>project.godot</code>, <code>layer_names/4="powerup"</code> is bit 4 = bitmask value 8, not 4. The bitmask value 4 is bit 3, named "brick". So <code>collision_layer = 4</code> in <code>brick.tscn</code> is correct — bricks are on the brick layer. However <code>powerup.tscn</code> uses <code>collision_layer = 8</code> correctly (bit 4). This notation is correct but confusing given that the layer number and its bitmask value are different. Worth a comment in both tscn files to prevent future editors from "fixing" them wrongly.</p>
+    <p class="file">entities/brick.tscn, entities/powerup.tscn, project.godot</p>
+  </div>
+  <span class="badge b-blue">Minor</span>
+</div>
+
+</div>
+
+<div class="sec">
+<p class="sec-title">Aesthetic</p>
+
+<div class="card">
+  <span class="num">8</span>
+  <div class="text">
+    <p class="title">LevelIntroPanel has no background — renders transparent over gameplay</p>
+    <p class="sub"><code>LevelIntroPanel</code> is a <code>PanelContainer</code> but the HUD tscn applies no theme or StyleBox to it, so in Godot 4 it defaults to the engine's flat dark theme — or transparent if no default theme is loaded. The text will render directly over mid-game bricks and particles, making it unreadable. Add a <code>StyleBoxFlat</code> with a semi-opaque fill (e.g. <code>Color(0.08, 0.05, 0.15, 0.88)</code> matching <code>GameTheme.NEON_BG</code>) and 1px cyan border, or replace with a <code>ColorRect</code> + <code>VBoxContainer</code>.</p>
+    <p class="file">ui/hud.tscn LevelIntroPanel</p>
+  </div>
+  <span class="badge b-red">Critical</span>
+</div>
+
+<div class="card">
+  <span class="num">9</span>
+  <div class="text">
+    <p class="title">Victory screen HighScoreLabel has no explicit hide in _ready — relies solely on tscn default</p>
+    <p class="sub"><code>victory.gd _ready()</code> only sets <code>high_score_label.visible = true</code> when a score exists, but never sets it <code>false</code>. If the tscn node default ever changes or the scene is reused, first-run players would see an empty label taking up layout space. A one-liner guard at the top of <code>_ready()</code> makes the intent explicit and immune to tscn changes: <code>high_score_label.visible = false</code>.</p>
+    <p class="file">ui/victory.gd _ready() · ui/victory.tscn HighScoreLabel</p>
+  </div>
+  <span class="badge b-blue">Minor</span>
+</div>
+
+</div>
+</div>
