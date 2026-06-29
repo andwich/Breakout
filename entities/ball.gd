@@ -79,7 +79,7 @@ func _physics_process(delta: float) -> void:
 	if dist < 1.0:
 		_stuck_frames += 1
 		if _stuck_frames > 30:
-			var escape_dir := _last_velocity.normalized() if _last_velocity.length_squared() > 1.0 else Vector2(randf_range(-0.5, 0.5), -1.0).normalized()
+			var escape_dir := _last_velocity.normalized() if _last_velocity.length_squared() > 0.01 else Vector2(randf_range(-0.5, 0.5), -1.0).normalized()
 			velocity = escape_dir.rotated(deg_to_rad(randf_range(-40, 40))) * speed
 			_stuck_frames = 0
 	else:
@@ -151,8 +151,9 @@ func _pop_visual() -> void:
 	tw.tween_property(self, "scale", Vector2(1.0, 1.0), 0.08)
 
 func _draw() -> void:
-	draw_circle(Vector2.ZERO, 14.0, Color(1.0, 1.0, 1.0, 0.12) * ball_color)
-	draw_circle(Vector2.ZERO, 10.0, Color(1.0, 1.0, 1.0, 0.25) * ball_color)
+	var bright := ball_color.lightened(0.3)
+	draw_circle(Vector2.ZERO, 14.0, Color(bright.r, bright.g, bright.b, 0.15))
+	draw_circle(Vector2.ZERO, 10.0, Color(bright.r, bright.g, bright.b, 0.30))
 	draw_circle(Vector2.ZERO, 8.0, ball_color)
 
 func _on_screen_exited() -> void:

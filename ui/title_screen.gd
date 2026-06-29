@@ -54,11 +54,20 @@ func _ready() -> void:
 
 	_title_glow()
 
+var _title_glow_tween: Tween
+
 func _title_glow() -> void:
-	var tw := create_tween()
-	tw.set_loops()
-	tw.tween_property(title_label, "theme_override_colors/font_color", GameTheme.NEON_LIME, 1.0)
-	tw.tween_property(title_label, "theme_override_colors/font_color", GameTheme.NEON_MAGENTA, 1.0)
+	var colors := [
+		GameTheme.NEON_CYAN,
+		GameTheme.NEON_LIME,
+		GameTheme.NEON_MAGENTA,
+		GameTheme.NEON_YELLOW,
+	]
+	_title_glow_tween = create_tween().set_loops()
+	for c in colors:
+		_title_glow_tween.tween_property(title_label, "modulate",
+			Color(c.r, c.g, c.b, 1.0), 0.55)
+	_title_glow_tween.tween_interval(0.3)
 
 func _spawn_bg_particles() -> void:
 	var particles := GPUParticles2D.new()
@@ -91,5 +100,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		_start_game()
 
 func _start_game() -> void:
+	if _title_glow_tween and _title_glow_tween.is_valid():
+		_title_glow_tween.kill()
+	RunState.reset()
 	RunState.start_level = 1
 	ScreenTransition.change_scene("res://main.tscn")

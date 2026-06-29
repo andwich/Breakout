@@ -19,6 +19,7 @@ var _edge_warn_right: float = 0.0
 var _big_paddle_timer: Timer
 var _sticky_timer: Timer
 var _sticky_release_callback: Callable
+var _deferred_launch: bool = false
 
 @onready var sprite: ColorRect = $Sprite
 
@@ -80,7 +81,8 @@ func _physics_process(delta: float) -> void:
 	_edge_warn_left = maxf(0.0, 1.0 - (position.x - left_bound) / 40.0)
 	_edge_warn_right = maxf(0.0, 1.0 - (right_bound - position.x) / 40.0)
 
-	aim_angle = clampf(velocity.x / speed * 45.0, -45.0, 45.0)
+	if not (sticky_mode and stuck_ball and is_instance_valid(stuck_ball)):
+		aim_angle = clampf(velocity.x / speed * 45.0, -45.0, 45.0)
 
 	if stuck_ball and is_instance_valid(stuck_ball) and sticky_mode:
 		stuck_ball.global_position = global_position + Vector2(0, -get_ball_attach_offset())
@@ -89,6 +91,14 @@ func _physics_process(delta: float) -> void:
 		queue_redraw()
 	if sticky_mode:
 		queue_redraw()
+
+func _process(_delta: float) -> void:
+	if _deferred_launch and not get_tree().paused and (not _sticky_release_callback.is_valid() or _sticky_release_callback.call()):
+		_deferred_launch = false
+		if stuck_ball and is_instance_valid(stuck_ball):
+			stuck_ball.launch(Vector2.UP, aim_angle)
+		stuck_ball = null
+	queue_redraw()
 
 func apply_big_paddle(duration_sec: float = 8.0) -> void:
 	target_width = normal_width * 1.6
@@ -119,11 +129,13 @@ func _disable_sticky() -> void:
 		stuck_ball.global_position = global_position + Vector2(0, -get_ball_attach_offset())
 		stuck_ball.velocity = Vector2.ZERO
 		stuck_ball.launched = false
-		if get_tree().paused or not is_processing() or (_sticky_release_callback.is_valid() and not _sticky_release_callback.call()):
-			pass
-		else:
+	if get_tree().paused or not is_processing() or (_sticky_release_callback.is_valid() and not _sticky_release_callback.call()):
+		_deferred_launch = true
+	else:
+		if stuck_ball and is_instance_valid(stuck_ball):
 			stuck_ball.launch(Vector2.UP, aim_angle)
-	stuck_ball = null
+		stuck_ball = null
+		_deferred_launch = false
 
 func reset() -> void:
 	_big_paddle_timer.stop()

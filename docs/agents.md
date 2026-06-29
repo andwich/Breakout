@@ -176,6 +176,14 @@ When making changes, verify:
 - [ ] Combo label centered on screen (not offset, not jittering with camera shake)
 - [ ] Score popup doesn't jump/misalign during simultaneous camera shake
 - [ ] Power-up icon (Sprite box + symbol) rotates together, not just glyph
+- [ ] Title screen BREAKOUT label cycles cyan→lime→magenta→yellow, no layout shift
+- [ ] Start game from title: shimmer tween killed, no color flash on main scene load
+- [ ] Sticky timer expires while paused: ball auto-launches on unpause, not stuck
+- [ ] Ball wedged in corner: escapes in previous travel direction, not random
+- [ ] Moving paddle right before sticky catch: aim lines stay tilted right after catch
+- [ ] Collect Multiball: all clone balls show tinted halos (not near-invisible white)
+- [ ] Collect Slow Balls: purple screen wash visible on dark background, clears on expiry
+- [ ] Launch sound: short, punchy chirp with harmonic texture (not flat sine sweep)
 
 ---
 
@@ -192,7 +200,8 @@ When working on this codebase:
 7. **Callback injection**: Use `Callable` injection (e.g., `paddle.set_sticky_release_callback()`) instead of `get_parent()` / `has_method()` / `call()` introspection
 8. **Unified hit contract**: `Brick.take_damage()` returns `{destroyed, awarded_points, score_points, remaining_hp, was_already_scored}` — all damage sources must consume this dictionary, never invent their own scoring rules
 9. **Laser manager setup**: `_setup_laser_manager()` centralizes paddle binding + phase gate; call it from all lifecycle entry points, not just `_run_setup()`
-10. **Document retro**: After each session, summarize in `docs/retro_MMDD.md`
+10. **Deferred launch pattern**: When a `_disable_sticky`, `_process` or other callback needs to launch a ball but the tree is paused, store a `_deferred_launch: bool` flag and check it in `_process()` (not `_physics_process`, which returns early when paused). Fire the actual launch on the first unpaused tick.
+11. **Document retro**: After each session, summarize in `docs/retro_MMDD.md`
 
 ### Useful Commands
 

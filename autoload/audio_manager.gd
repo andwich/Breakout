@@ -86,7 +86,9 @@ func play_launch() -> void:
 	for i in range(num_samples):
 		var t := float(i) / SAMPLE_RATE
 		var freq := 200.0 + t * 3000.0
-		var sample := sin(2.0 * PI * freq * t) * 0.3 * maxf(0.0, 1.0 - t / 0.1)
+		var fundamental := sin(2.0 * PI * freq * t)
+		var harmonic := sin(2.0 * PI * freq * 2.0 * t) * 0.45
+		var sample := (fundamental + harmonic) / 1.45 * 0.3 * maxf(0.0, 1.0 - t / 0.1)
 		var val := int(clampf(sample * 32767.0, -32767.0, 32767.0))
 		_pack_sample(data, i, val)
 	var wav := AudioStreamWAV.new()

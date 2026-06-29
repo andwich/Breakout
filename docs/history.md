@@ -2,6 +2,16 @@
 
 ---
 
+## Session 19 (2026-06-26) — Feedback 0626 1727 fixes
+
+- **8 changes across 5 files (+ docs)** — full rollout of 8 items from `docs/Feedback 0626 1727.md`
+- **High (3)**: `title_screen.gd` added `RunState.reset()` + tween lifecycle guard; `paddle.gd` added `_deferred_launch` to prevent permanently stuck ball when timer expires while paused; `ball.gd` stuck-escape threshold `> 1.0` → `> 0.01` to avoid random escape for slow-moving balls
+- **Medium (5)**: `paddle.gd` freezes `aim_angle` when sticky + stuck ball (preserves pre-catch tilt); `title_screen.gd` replaced abrupt `theme_override_colors/font_color` glow with smooth `modulate` shimmer cycling 4 neon colors; `ball.gd` glow rings use `ball_color.lightened(0.3)` instead of white multiply; `main.gd` slow overlay tinted `NEON_PURPLE` (alpha 0.18); `audio_manager.gd` launch sound mixes 2nd harmonic for punchier attack
+- **Files**: `ui/title_screen.gd`, `entities/paddle.gd`, `entities/ball.gd`, `main.gd`, `autoload/audio_manager.gd`
+- **Docs**: `docs/retro_0626.md` created, `docs/readme.md` updated, `docs/agents.md` updated with deferred launch pattern + 8 new test checklist items
+
+---
+
 ## Session 18 (2026-06-25) — Feedback 0625 0009 fixes
 
 - **5 changes across 5 files** — sticky expiry callback injection, laser scoring unification, brick hit result contract cleanup, ball collision stepping robustness, laser manager rebinding

@@ -101,7 +101,8 @@ func _setup_laser_manager() -> void:
 
 	_slow_overlay = ColorRect.new()
 	_slow_overlay.anchors_preset = Control.PRESET_FULL_RECT
-	_slow_overlay.color = Color(0.0, 0.0, 0.0, 0.0)
+	var sc := GameTheme.NEON_PURPLE
+	_slow_overlay.color = Color(sc.r, sc.g, sc.b, 0.0)
 	_slow_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_slow_overlay.z_index = 0
 	hud.add_child(_slow_overlay)
@@ -545,7 +546,7 @@ func _apply_slow_balls(duration: float) -> void:
 	hud.set_effect_timer(PowerUpRegistry.effect_id_for(PowerUp.Type.SLOW_BALLS), PowerUpRegistry.hud_label_for(PowerUp.Type.SLOW_BALLS), duration, PowerUpRegistry.color_for(PowerUp.Type.SLOW_BALLS))
 	if _slow_overlay:
 		var tw := create_tween()
-		tw.tween_property(_slow_overlay, "color:a", 0.12, 0.2)
+		tw.tween_property(_slow_overlay, "color:a", 0.18, 0.2)
 
 func _restore_ball_speeds() -> void:
 	hud.clear_effect_timer(PowerUpRegistry.effect_id_for(PowerUp.Type.SLOW_BALLS))
