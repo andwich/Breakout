@@ -24,7 +24,7 @@ res://
 │   └── powerup_registry.gd # Central power-up metadata (icons, colors, durations, weights)
 ├── autoload/
 │   ├── audio_manager.gd   # Synthesized sound effects (8 tones, play-and-forget)
-│   ├── game_theme.gd      # Color constants (NEON_CYAN, NEON_MAGENTA, etc.)
+│   ├── game_theme.gd      # Semantic color constants (ACCENT, SUCCESS, INFO, WARNING, DANGER, etc.)
 │   ├── run_state.gd       # Transient: start_level, last_score
 │   ├── save_data.gd       # Persistence: get_high_score(), save_high_score()
 │   └── screen_transition.gd # Scene fade transitions (deadlock guard, public API)
@@ -75,8 +75,8 @@ res://
 
 | Autoload | Purpose |
 |----------|---------|
-| `AudioManager` | Synthesized sound effects (8 tones) |
-| `GameTheme` | Color constants only |
+| `AudioManager` | Synthesized sound effects (8 tones, pentatonic/musical scales) |
+| `GameTheme` | Semantic color palette (ACCENT, SUCCESS, INFO, etc.) |
 | `RunState` | Transient session state |
 | `SaveData` | High score persistence |
 | `ScreenTransition` | Scene fades (`is_busy()`, `force_reset()` public API) |
@@ -219,7 +219,7 @@ When making changes, verify:
 - [ ] Score popup floats from destroyed bricks
 - [ ] Power-up pickup scale-up + fade
 - [ ] Big Paddle green tint, reverts on expiry
-- [ ] Title screen color cycling, no layout shift
+- [ ] Title screen breathing pulse (single-color alpha modulation), no layout shift
 - [ ] Sticky pulsing border between catches
 - [ ] Power-up icon rotates together
 - [ ] Launch sound: punchy chirp, not flat sine sweep

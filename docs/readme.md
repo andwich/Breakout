@@ -1,6 +1,6 @@
 # Breakout — Modern Retro Breakout Game
 
-A modern breakout game inspired by Atari's classic, built with **Godot 4.x** featuring neon visuals, 6 power-up types, 5 progressive levels + endless mode, and boss bricks.
+A modern breakout game inspired by Atari's classic, built with **Godot 4.x** featuring a calm dashboard aesthetic, 6 power-up types, 5 progressive levels + endless mode, and boss bricks.
 
 ---
 
@@ -18,7 +18,7 @@ A modern breakout game inspired by Atari's classic, built with **Godot 4.x** fea
 - **6 power-up types**: Multiball, Big Paddle, Sticky, Laser, Slow Balls, Extra Life
 - **5 hand-crafted levels** with progressive difficulty → Endless mode
 - **3 brick types**: Standard (1 HP), Metal (3 HP, scanline shader), Boss (5 HP, pulsing glow)
-- **Neon palette**: cyan/magenta/lime/yellow on dark, glow shaders, particle FX
+- **Calm palette**: soft blue/green/purple/amber on dark, glow shaders, particle FX
 - **Controls**: Keyboard (A/D, Arrows, Space) or mouse (paddle follows cursor)
 - **Audio**: Synthesized tones (brick hit, paddle hit, launch, power-up, etc.)
 - **Persistent high scores**
@@ -82,6 +82,7 @@ res://
 - **Sticky context prompt**: `sticky_ball_caught` / `sticky_ball_released` signals drive a distinct "AIM WITH PADDLE" HUD prompt
 - **Power-up round-clear grace**: power-ups collected in the same frame as `ROUND_CLEAR` resolve their effects instead of being silently dropped
 - **Visual hierarchy**: standard bricks darkened 12% for idle state; hit flashes remain bright white; slow overlay reduced to 0.10 alpha
+- **Semantic color palette**: `GameTheme` replaced NEON_* constants with ACCENT/SUCCESS/INFO/WARNING/DANGER/BRICK_BOSS/BACKGROUND/BORDER_SUBTLE/TEXT_PRIMARY/TEXT_MUTED; old NEON_* names preserved as aliases for backward compat
 - **Ball pop tween lifecycle**: `pop_tween` member stored, killed before recreate; squash/stretch `Vector2(1.16, 0.88) → Vector2.ONE` elastic; always begins from `Vector2.ONE`
 - **Feedback density caps**: max 2 score popups and 2 shake requests per physics frame; priority pass-through for scores ≥100; 28ms brick-hit audio cooldown
 - **AudioStreamPlayer pooling**: 12-player preallocated pool in `AudioManager`; round-robin reuse eliminates per-effect node allocation churn during dense gameplay
@@ -98,7 +99,7 @@ res://
 
 - **Design**: Derived from Atari's Breakout (1976)
 - **Engine**: Godot 4.x
-- **Palette**: Retro-neon (cyan/magenta/lime on dark blue-black)
+- **Palette**: Calm dashboard (soft blue/green/purple/amber on dark)
 
 ---
 

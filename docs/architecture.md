@@ -56,7 +56,7 @@ main.tscn (Main : Node2D)
 
 | File | Role |
 |------|------|
-| `ui/title_screen.gd` | Title card: high score, controls, power-up legend, color-cycling label |
+| `ui/title_screen.gd` | Title card: high score, controls, power-up legend, breathing alpha pulse |
 | `ui/hud.gd` | Score, lives, multi-effect timer strip, level intro panel, pause/game-over text |
 | `ui/victory.gd` | Win screen with confetti, endless mode entry |
 
@@ -65,7 +65,7 @@ main.tscn (Main : Node2D)
 | Autoload | File | Purpose |
 |----------|------|---------|
 | `AudioManager` | `autoload/audio_manager.gd` | Synthesized sound effects (8 PCM tones, play-and-forget), mute toggle |
-| `GameTheme` | `autoload/game_theme.gd` | Neon color constants (NEON_CYAN, NEON_MAGENTA, etc.) |
+| `GameTheme` | `autoload/game_theme.gd` | Semantic color palette (ACCENT, SUCCESS, INFO, WARNING, DANGER, BRICK_BOSS, BACKGROUND, BORDER_SUBTLE, TEXT_PRIMARY, TEXT_MUTED) |
 | `RunState` | `autoload/run_state.gd` | Transient session: `start_level`, `last_score` |
 | `SaveData` | `autoload/save_data.gd` | High score persistence to `user://breakout_save.json` |
 | `ScreenTransition` | `autoload/screen_transition.gd` | Scene fade in/out with deadlock guard (5s timeout), public API: `is_busy()`, `force_reset()` |
@@ -164,7 +164,7 @@ When a sticky release callback fires during a paused tree, the launch is deferre
 
 ### Centralized Paddle Visual State
 
-`Paddle.refresh_visual_state()` is the single authority for paddle color: Sticky → `NEON_YELLOW`, Big Paddle → `NEON_LIME`, else `NEON_CYAN`. Power-up methods never write `sprite.color` directly — they mutate effect state and call `refresh_visual_state()`. This eliminates order-dependent tint bugs (e.g., Sticky expiry clobbering the Big Paddle lime tint).
+`Paddle.refresh_visual_state()` is the single authority for paddle color: Sticky → `WARNING`, Big Paddle → `SUCCESS`, else `ACCENT`. Power-up methods never write `sprite.color` directly — they mutate effect state and call `refresh_visual_state()`. This eliminates order-dependent tint bugs (e.g., Sticky expiry clobbering the Big Paddle lime tint).
 
 ### Adaptive Ball Substeps
 

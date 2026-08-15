@@ -4,6 +4,24 @@ All notable changes to Breakout are documented here. Derived from session retro 
 
 ---
 
+## 2026-08-14 — Session 28: Complete Retheme — Neon Arcade → Calm Dashboard
+
+### Changed
+- **Semantic color palette** — `game_theme.gd`: replaced NEON_CYAN/MAGENTA/LIME/YELLOW/RED/PURPLE with ACCENT/SUCCESS/INFO/WARNING/DANGER/BRICK_BOSS/BACKGROUND/BORDER_SUBTLE/TEXT_PRIMARY/TEXT_MUTED. Old NEON_* names preserved as aliases.
+- **Entity colors** — All entities migrated to semantic palette: brick rows (DANGER→INFO→BRICK_BOSS), paddle (Sticky→WARNING, Big Paddle→SUCCESS, else ACCENT), ball (softened BALL color), border (BORDER_SUBTLE glow), ring effect (semantic pulse), laser (ACCENT)
+- **Title screen** — Replaced 4-color hue cycling with single slow breathing pulse (modulate alpha 0.72→1.0); scanline eased to 0.04/0.3; controls muted; powerup legend at 0.7 alpha; VBoxContainer widened
+- **Victory screen** — TEXT_PRIMARY title with ACCENT outline glow; elastic scale animation (TRANS_ELASTIC + EASE_OUT); sequential fade-in for score/highscore/prompt; confetti reduced (5 pieces, 2 colors, slower, smaller); VBoxContainer expanded with center alignment
+- **HUD** — All label colors, border, effect timer defaults migrated to semantic palette
+- **Audio retune** — Brick hits use pentatonic scale; paddle hit deeper (120Hz); launch sweep gentler (150→400Hz); powerup uses E-G-B chord; life lost gentle 440→160Hz drop; level complete longer tail; game over C minor; laser fire softer (440Hz A4)
+- **Level builder** — ROW_COLORS uses semantic palette
+- **Power-up registry** — Powerup colors use semantic palette
+
+### Fixed
+- **Parse error** — `main.gd:106` indentation error from slow_overlay edit
+- **Victory animation** — Score/highscore now properly faded during title entrance (modulate.a = 0.0 before tween)
+
+---
+
 ## 2026-08-10 — Session 27: Feedback 0810 2225 fixes
 
 ### Fixed

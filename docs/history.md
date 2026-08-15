@@ -2,6 +2,19 @@
 
 ---
 
+## Session 28 (2026-08-14) — Complete Retheme: Neon Arcade → Calm Dashboard
+
+- **40+ changes across 35+ files** — full visual and audio retheme from neon arcade to calm dashboard
+- **Theme**: `autoload/game_theme.gd` replaced NEON_* constants with semantic palette (ACCENT, SUCCESS, INFO, WARNING, DANGER, BRICK_BOSS, BACKGROUND, BORDER_SUBTLE, TEXT_PRIMARY, TEXT_MUTED); old names kept as aliases
+- **Entities**: All entity colors migrated to semantic palette (brick, paddle, ball, border, ring_effect, laser)
+- **Title screen**: Replaced 4-color hue cycling with single slow breathing pulse; scanline eased; controls muted; powerup legend at reduced alpha
+- **Victory screen**: TEXT_PRIMARY title with ACCENT glow; elastic scale animation; confetti toned down (5 pieces, 2 colors, slower); sequential fade-in reveal
+- **HUD**: All label colors, borders, effect timer defaults migrated to semantic palette
+- **Audio**: All 8 sound events retuned — pentatonic brick hits, softer volumes, gentler sweeps, musical chords
+- **Bug fixes**: `main.gd` line 106 parse error (indentation); victory animation score visibility gap
+- **Lessons**: Designer tasks may produce specs without writing files; always grep `.tscn` files for color literals; headless validation is essential
+- **Files**: `autoload/game_theme.gd`, `autoload/audio_manager.gd`, `entities/brick.gd`, `entities/paddle.gd`, `entities/ball.gd`, `entities/playfield_border.gd`, `entities/ring_effect.gd`, `entities/laser_manager.gd`, `entities/laser_beam.tscn`, `entities/paddle.tscn`, `ui/hud.gd`, `ui/hud.tscn`, `ui/title_screen.gd`, `ui/title_screen.tscn`, `ui/victory.gd`, `ui/victory.tscn`, `main.gd`, `main.tscn`, `game/level_builder.gd`, `game/powerup_registry.gd`, `project.godot`, `docs/readme.md`, `docs/agents.md`, `docs/history.md`, `docs/changelog.md`, `docs/architecture.md`
+
 ## Session 27 (2026-08-10) — Feedback 0810 2225 fixes
 
 - **4 changes across 3 files** — root-cause scene corruption fix + explicit typing hardening from `docs/Feedback 0810 2225.md`
