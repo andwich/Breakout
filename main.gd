@@ -3,9 +3,9 @@ extends Node2D
 # Collision layers: 1=Paddle, 2=Ball, 3=Brick, 4=PowerUp, 5=LaserBeam, 6=Wall (layer bit 32)
 # Ball collision_mask = 37 (1+4+32) = Paddle + Brick + Wall. Correct by design.
 
-const BALL_SCENE := preload("res://entities/ball.tscn")
-const BRICK_SCENE := preload("res://entities/brick.tscn")
-const POWERUP_SCENE := preload("res://entities/powerup.tscn")
+const BALL_SCENE: PackedScene = preload("res://entities/ball.tscn")
+const BRICK_SCENE: PackedScene = preload("res://entities/brick.tscn")
+const POWERUP_SCENE: PackedScene = preload("res://entities/powerup.tscn")
 const _NO_POS := Vector2(-99999.0, -99999.0)
 
 @onready var paddle: Paddle = $Paddle
@@ -14,7 +14,7 @@ const _NO_POS := Vector2(-99999.0, -99999.0)
 @onready var powerups_container: Node2D = $PowerUps
 @onready var laser_manager: LaserManager = $LaserManager
 @onready var hud: HUD = $HUD
-@onready var score_sfx: AudioStreamPlayer = $ScoreSfx
+
 
 var level_builder := LevelBuilder.new()
 var phase: GameState.Phase = GameState.Phase.LEVEL_INTRO
@@ -31,6 +31,7 @@ var _drops_this_frame: int = 0
 var _life_lost_pending := false
 var _intro_gen: int = 0
 var _restart_ready := false
+var suppress_launch_until_release := false
 var _intro_timer: SceneTreeTimer
 var _combo_count: int = 0
 var _combo_timer: Timer
@@ -39,35 +40,36 @@ var _shake_intensity: float = 0.0
 var _shake_tween: Tween
 var _base_position: Vector2
 var _combo_tween: Tween
+var _score_popups_this_frame: int = 0
+var _shake_requests_this_frame: int = 0
+
+const MAX_SCORE_POPUPS_PER_FRAME := 2
+const MAX_SHAKE_REQUESTS_PER_FRAME := 2
 var _glow_tween: Tween
 var _flash_overlay: ColorRect
 var _slow_overlay: ColorRect
+var _flash_tween: Tween
+var _slow_tween: Tween
 
 func _ready() -> void:
 	_run_setup()
 	var requested_level := RunState.start_level
 	RunState.start_level = 1
 	_start_new_run(requested_level)
+	suppress_launch_until_release = true
 
 func _run_setup() -> void:
 	_base_position = position
 
-	_setup_laser_manager()
+	_bind_laser_manager()
 	laser_manager.brick_scored.connect(_on_brick_hit)
 	laser_manager.laser_fired.connect(AudioManager.play_laser_fire)
 
 	paddle.set_sticky_release_callback(func(): return _is_phase_playing())
+	paddle.sticky_ball_caught.connect(_on_sticky_ball_caught)
+	paddle.sticky_ball_released.connect(_on_sticky_ball_released)
 
-func _setup_laser_manager() -> void:
-	if laser_manager == null:
-		return
-	laser_manager.set_paddle(paddle)
-	laser_manager.set_can_fire_check(func(): return phase == GameState.Phase.PLAYING)
-
-	var left_shape  := $LeftWall/CollisionShape2D.shape  as RectangleShape2D
-	var right_shape := $RightWall/CollisionShape2D.shape as RectangleShape2D
-	paddle.wall_left_x  = $LeftWall.position.x  + left_shape.size.x  / 2.0
-	paddle.wall_right_x = $RightWall.position.x - right_shape.size.x / 2.0
+	_update_wall_bounds()
 
 	_slow_timer = Timer.new()
 	_slow_timer.one_shot = true
@@ -101,13 +103,25 @@ func _setup_laser_manager() -> void:
 
 	_slow_overlay = ColorRect.new()
 	_slow_overlay.anchors_preset = Control.PRESET_FULL_RECT
-	var sc := GameTheme.NEON_PURPLE
+	var sc := GameTheme.INFO
 	_slow_overlay.color = Color(sc.r, sc.g, sc.b, 0.0)
 	_slow_overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_slow_overlay.z_index = 0
 	hud.add_child(_slow_overlay)
 
 	_spawn_background_particles()
+
+func _bind_laser_manager() -> void:
+	if laser_manager == null:
+		return
+	laser_manager.set_paddle(paddle)
+	laser_manager.set_can_fire_check(func(): return phase == GameState.Phase.PLAYING)
+
+func _update_wall_bounds() -> void:
+	var left_shape  := $LeftWall/CollisionShape2D.shape  as RectangleShape2D
+	var right_shape := $RightWall/CollisionShape2D.shape as RectangleShape2D
+	paddle.wall_left_x  = $LeftWall.position.x  + left_shape.size.x  / 2.0
+	paddle.wall_right_x = $RightWall.position.x - right_shape.size.x / 2.0
 
 func start_new_run(start_level: int = 1) -> void:
 	RunState.start_level = 1
@@ -121,8 +135,26 @@ func _start_new_run(start_level: int = 1) -> void:
 	_life_lost_pending = false
 	get_tree().paused = false
 	_restore_ball_speeds()
+	_combo_count = 0
+	_combo_timer.stop()
+	if _combo_tween and _combo_tween.is_valid():
+		_combo_tween.kill()
+	if _combo_label:
+		_combo_label.visible = false
+	if _shake_tween and _shake_tween.is_valid():
+		_shake_tween.kill()
+	if _flash_tween and _flash_tween.is_valid():
+		_flash_tween.kill()
+	if _slow_tween and _slow_tween.is_valid():
+		_slow_tween.kill()
+	if _flash_overlay:
+		_flash_overlay.color.a = 0.0
+	if _slow_overlay:
+		_slow_overlay.color.a = 0.0
+	_shake_intensity = 0.0
+	position = _base_position
 	laser_manager.deactivate()
-	_setup_laser_manager()
+	_bind_laser_manager()
 	paddle.position = _paddle_spawn_pos()
 	paddle.set_process(true)
 	paddle.set_physics_process(true)
@@ -140,7 +172,7 @@ func _load_level(level: int) -> void:
 	current_level = level
 	_level_config = LevelDefs.config_for_level(current_level)
 	laser_manager.deactivate()
-	_setup_laser_manager()
+	_bind_laser_manager()
 	for child in laser_manager.get_children():
 		if child is LaserBeam:
 			child.queue_free()
@@ -153,6 +185,10 @@ func _load_level(level: int) -> void:
 		child.queue_free()
 	for child in powerups_container.get_children():
 		child.queue_free()
+	if _shake_tween and _shake_tween.is_valid():
+		_shake_tween.kill()
+	_shake_intensity = 0.0
+	position = _base_position
 	paddle.reset()
 	paddle.position = _paddle_spawn_pos()
 	paddle.set_process(true)
@@ -216,7 +252,7 @@ func _spawn_ball(at: Vector2 = _NO_POS) -> Ball:
 	ball.position = at
 	ball.speed = ball.base_speed * _level_config["speed_mult"] * _slow_factor
 	ball.set_paddle(paddle)
-	_setup_laser_manager()
+	_bind_laser_manager()
 	ball.life_lost.connect(_on_ball_lost)
 	ball.brick_hit.connect(_on_brick_hit)
 	ball.paddle_hit.connect(_on_ball_paddle_hit)
@@ -230,6 +266,11 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_M:
 		AudioManager.toggle_mute()
+		return
+
+	if suppress_launch_until_release:
+		if event.is_action_released("ui_accept") or event.is_action_released("click"):
+			suppress_launch_until_release = false
 		return
 
 	if get_tree().paused:
@@ -269,6 +310,9 @@ func _toggle_pause() -> void:
 func _on_brick_hit(points: int) -> void:
 	if phase != GameState.Phase.PLAYING:
 		return
+	if points <= 0:
+		AudioManager.play_brick_hit(0.8)
+		return
 	_combo_count = mini(_combo_count + 1, 15)
 	_combo_timer.start()
 	var combo_bonus := 0
@@ -284,9 +328,9 @@ func _on_brick_destroyed(pos: Vector2, drop_chance: float, point_value: int) -> 
 		return
 	brick_count = max(0, brick_count - 1)
 
-	_spawn_score_popup(pos, point_value)
+	try_spawn_score_popup(pos, point_value)
 	_spawn_powerup(pos, drop_chance)
-	_shake_camera(3.0, 0.08)
+	try_shake_camera(3.0, 0.08)
 
 	if brick_count <= 0:
 		_resolve_round_clear()
@@ -306,8 +350,7 @@ func _resolve_round_clear() -> void:
 		return
 	hud.show_level_complete(false)
 
-	var is_last_story_level := (current_level == LevelDefs.base_levels().size()
-		and RunState.start_level <= LevelDefs.base_levels().size())
+	var is_last_story_level := (current_level == LevelDefs.base_levels().size())
 	if is_last_story_level:
 		RunState.last_score = score
 		phase = GameState.Phase.VICTORY
@@ -315,17 +358,16 @@ func _resolve_round_clear() -> void:
 		for b in balls_container.get_children():
 			if b is Ball:
 				b.set_physics_process(false)
-		if ScreenTransition._busy:
-			push_warning("ScreenTransition busy; victory scene not loaded")
-		else:
-			ScreenTransition.change_scene("res://ui/victory.tscn")
+		while ScreenTransition.is_busy():
+			await get_tree().create_timer(0.1).timeout
+		ScreenTransition.change_scene("res://ui/victory.tscn")
 		return
 
 	_transitioning = false
 	_load_level(current_level + 1)
 
 func _on_ball_paddle_hit() -> void:
-	_shake_camera(1.5, 0.04)
+	try_shake_camera(1.5, 0.04)
 	AudioManager.play_paddle_hit()
 
 func _on_ball_lost() -> void:
@@ -345,9 +387,11 @@ func _process_life_loss() -> void:
 	hud.update_lives(lives)
 	AudioManager.play_life_lost()
 	if _flash_overlay:
-		var tw := create_tween()
-		tw.tween_property(_flash_overlay, "color:a", 0.25, 0.05)
-		tw.tween_property(_flash_overlay, "color:a", 0.0, 0.2)
+		if is_instance_valid(_flash_tween):
+			_flash_tween.kill()
+		_flash_tween = create_tween()
+		_flash_tween.tween_property(_flash_overlay, "color:a", 0.25, 0.05)
+		_flash_tween.tween_property(_flash_overlay, "color:a", 0.0, 0.2)
 	if lives <= 0:
 		_enter_game_over()
 		return
@@ -359,7 +403,7 @@ func _enter_game_over() -> void:
 	hud.show_game_over(true, score)
 	AudioManager.play_game_over()
 	_restart_ready = false
-	ScreenTransition._busy = false
+	ScreenTransition.force_reset()
 	get_tree().create_timer(1.0).timeout.connect(func(): _restart_ready = true, CONNECT_ONE_SHOT)
 
 	paddle.set_process(false)
@@ -403,7 +447,7 @@ func _animate_brick_entrance() -> void:
 	var i := 0
 	for brick in bricks_container.get_children():
 		if brick is Brick:
-			var orig_y := brick.position.y
+			var orig_y: float = brick.position.y
 			brick.position.y -= 20
 			var tw := create_tween()
 			tw.tween_property(brick, "position:y", orig_y, 0.2).set_delay(i * 0.015).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
@@ -423,7 +467,7 @@ func _spawn_powerup(pos: Vector2, drop_chance: float) -> void:
 	powerups_container.add_child(p)
 
 func _on_powerup_collected(ptype: PowerUp.Type, duration: float) -> void:
-	if phase != GameState.Phase.PLAYING:
+	if phase not in [GameState.Phase.PLAYING, GameState.Phase.ROUND_CLEAR]:
 		return
 	_shake_camera(2.0, 0.05)
 	AudioManager.play_powerup()
@@ -442,7 +486,7 @@ func _on_powerup_collected(ptype: PowerUp.Type, duration: float) -> void:
 					if slots <= 0:
 						break
 					var clone := _spawn_ball(original.position)
-					clone.ball_color = GameTheme.NEON_MAGENTA
+					clone.ball_color = Color(GameTheme.WARNING.r, GameTheme.WARNING.g, GameTheme.WARNING.b, 1.0)
 					clone.launched = true
 					var rotated := original.velocity.rotated(deg_to_rad(
 						randf_range(25, 45) * (1 if randi() % 2 == 0 else -1)))
@@ -460,7 +504,7 @@ func _on_powerup_collected(ptype: PowerUp.Type, duration: float) -> void:
 			hud.set_effect_timer(PowerUpRegistry.effect_id_for(ptype), PowerUpRegistry.hud_label_for(ptype), duration, PowerUpRegistry.color_for(ptype))
 
 		PowerUp.Type.LASER:
-			_setup_laser_manager()
+			_bind_laser_manager()
 			laser_manager.activate(duration)
 			hud.set_effect_timer(PowerUpRegistry.effect_id_for(ptype), PowerUpRegistry.hud_label_for(ptype), duration, PowerUpRegistry.color_for(ptype))
 
@@ -487,7 +531,7 @@ func _spawn_background_particles() -> void:
 	mat.spread = 180.0
 	mat.scale_min = 0.5
 	mat.scale_max = 1.5
-	var pc := GameTheme.NEON_CYAN
+	var pc := Color(GameTheme.BORDER_STRONG.r, GameTheme.BORDER_STRONG.g, GameTheme.BORDER_STRONG.b, 1.0)
 	pc.a = 0.08
 	mat.color = pc
 	mat.lifetime_randomness = 0.5
@@ -510,7 +554,7 @@ func _show_combo(count: int, bonus: int) -> void:
 	if _combo_tween and _combo_tween.is_valid():
 		_combo_tween.kill()
 	_combo_label.text = "COMBO x%d  +%d" % [count, bonus]
-	_combo_label.modulate = Color(1.0, 0.8, 0.2, 1.0) if count < 6 else Color(1.0, 0.3, 0.3, 1.0)
+	_combo_label.modulate = Color(GameTheme.WARNING) if count < 6 else Color(GameTheme.DANGER)
 	_combo_label.add_theme_font_size_override("font_size", mini(28 + count * 2, 48))
 	_combo_label.visible = true
 	_combo_label.modulate.a = 1.0
@@ -525,7 +569,7 @@ func _shake_camera(intensity: float, duration: float) -> void:
 		return
 	_shake_tween = create_tween()
 	_shake_tween.tween_method(func(t):
-		var decay := 1.0 - t
+		var decay: float = 1.0 - t
 		position = _base_position + Vector2(randf_range(-_shake_intensity, _shake_intensity), randf_range(-_shake_intensity, _shake_intensity)) * decay
 	, 0.0, 1.0, duration)
 	_shake_tween.tween_callback(func(): position = _base_position; _shake_intensity = 0.0)
@@ -545,8 +589,10 @@ func _apply_slow_balls(duration: float) -> void:
 	_slow_timer.start(duration)
 	hud.set_effect_timer(PowerUpRegistry.effect_id_for(PowerUp.Type.SLOW_BALLS), PowerUpRegistry.hud_label_for(PowerUp.Type.SLOW_BALLS), duration, PowerUpRegistry.color_for(PowerUp.Type.SLOW_BALLS))
 	if _slow_overlay:
-		var tw := create_tween()
-		tw.tween_property(_slow_overlay, "color:a", 0.18, 0.2)
+		if is_instance_valid(_slow_tween):
+			_slow_tween.kill()
+		_slow_tween = create_tween()
+		_slow_tween.tween_property(_slow_overlay, "color:a", 0.10, 0.2)
 
 func _restore_ball_speeds() -> void:
 	hud.clear_effect_timer(PowerUpRegistry.effect_id_for(PowerUp.Type.SLOW_BALLS))
@@ -557,8 +603,10 @@ func _restore_ball_speeds() -> void:
 			if b.launched and b.velocity.length_squared() > 1.0:
 				b.velocity = b.velocity.normalized() * b.speed
 	if _slow_overlay:
-		var tw := create_tween()
-		tw.tween_property(_slow_overlay, "color:a", 0.0, 0.2)
+		if is_instance_valid(_slow_tween):
+			_slow_tween.kill()
+		_slow_tween = create_tween()
+		_slow_tween.tween_property(_slow_overlay, "color:a", 0.0, 0.2)
 
 func _spawn_score_popup(world_pos: Vector2, value: int) -> void:
 	var stable_pos := world_pos - (position - _base_position)
@@ -576,11 +624,32 @@ func _spawn_score_popup(world_pos: Vector2, value: int) -> void:
 	tw.parallel().tween_property(label, "modulate:a", 0.0, 0.4).set_delay(0.2)
 	tw.tween_callback(label.queue_free)
 
+func try_spawn_score_popup(world_pos: Vector2, value: int) -> void:
+	if value <= 0:
+		return
+	var is_priority := value >= 100
+	if _score_popups_this_frame >= MAX_SCORE_POPUPS_PER_FRAME and not is_priority:
+		return
+	_score_popups_this_frame += 1
+	_spawn_score_popup(world_pos, value)
+
+func try_shake_camera(intensity: float, duration: float) -> void:
+	if _shake_requests_this_frame >= MAX_SHAKE_REQUESTS_PER_FRAME:
+		return
+	_shake_requests_this_frame += 1
+	_shake_camera(intensity, duration)
+
 func _physics_process(_delta: float) -> void:
 	_drops_this_frame = 0
-
-func _get_phase() -> GameState.Phase:
-	return phase
+	_score_popups_this_frame = 0
+	_shake_requests_this_frame = 0
 
 func _is_phase_playing() -> bool:
 	return phase == GameState.Phase.PLAYING
+
+func _on_sticky_ball_caught() -> void:
+	if phase == GameState.Phase.PLAYING:
+		hud.show_context_prompt("AIM • RELEASE TO FIRE")
+
+func _on_sticky_ball_released() -> void:
+	hud.hide_context_prompt()

@@ -15,15 +15,13 @@ A modern breakout game inspired by Atari's classic, built with **Godot 4.x** fea
 
 ## Features
 
-| Feature | Description |
-|---------|-------------|
-| **Power-ups** | 6 types: Multiball, Big Paddle, Sticky, Laser, Slow Balls, Extra Life |
-| **Levels** | 5 hand-crafted layouts with progressive difficulty → Endless mode |
-| **Brick HP** | Standard (1 HP), Metal (3 HP, animated), Boss (5 HP, pulsing) |
-| **Visuals** | Neon palette (cyan/magenta/lime on dark), glow shaders, particle FX |
-| **Controls** | Keyboard (A/D, Arrows, Space) or mouse click/touch drag |
-| **Audio** | Synthesized sound effects (brick hit, paddle hit, launch, etc.) |
-| **High Scores** | Persistent to local file |
+- **6 power-up types**: Multiball, Big Paddle, Sticky, Laser, Slow Balls, Extra Life
+- **5 hand-crafted levels** with progressive difficulty → Endless mode
+- **3 brick types**: Standard (1 HP), Metal (3 HP, scanline shader), Boss (5 HP, pulsing glow)
+- **Neon palette**: cyan/magenta/lime/yellow on dark, glow shaders, particle FX
+- **Controls**: Keyboard (A/D, Arrows, Space) or mouse (paddle follows cursor)
+- **Audio**: Synthesized tones (brick hit, paddle hit, launch, power-up, etc.)
+- **Persistent high scores**
 
 ---
 
@@ -31,40 +29,10 @@ A modern breakout game inspired by Atari's classic, built with **Godot 4.x** fea
 
 | Action | Keys |
 |--------|------|
-| **Move Left** | `A` or `←` |
-| **Move Right** | `D` or `→` |
-| **Launch Ball** | `Space` or `Left Click` |
-| **Pause** | `Escape` |
-| **Restart** | `Confirm` after game over |
-| **Mute** | `M` |
-
----
-
-## Power-up Reference
-
-| Icon | Type | Effect | Duration |
-|------|------|--------|----------|
-| **M** | Multiball | Spawns 2 clones per ball | — |
-| **B** | Big Paddle | 1.6× width expansion | 8 sec |
-| **S** | Sticky | Catches ball, next click launches | 8 sec |
-| **L** | Laser | Auto-fires beams every 0.3s | 8 sec |
-| **↓** | Slow Balls | Ball speed reduced to 60% | 8 sec |
-| **♥** | Extra Life | +1 life | — |
-
----
-
-## Level Progression
-
-| Level | Name | Bricks | Speed | Special |
-|-------|------|--------|-------|---------|
-| 1 | Opening Volley | 8×4 | 1.0× | — |
-| 2 | Controlled Angles | 10×5 | 1.1× | — |
-| 3 | Metal Core | 10×6 | 1.2× | Metal (3 HP) |
-| 4 | Boss Gate | 12×6 | 1.3× | Boss (5 HP) |
-| 5 | Breach Point | 12×7 | 1.45× | Boss + Metal |
-| Endless | — | ↑ | ↑ | Scaled HP |
-
-Clear Level 5 to unlock Endless Mode. Each level has authored drop-weight tables and a stage intro card.
+| Move | `A` / `D`, `←` / `→`, or mouse (cursor over window) |
+| Launch | `Space` or `Left Click` |
+| Pause | `Escape` |
+| Mute | `M` |
 
 ---
 
@@ -74,8 +42,8 @@ Clear Level 5 to unlock Endless Mode. Each level has authored drop-weight tables
 res://
 ├── main.tscn/.gd          # Run conductor (session/level/round flow)
 ├── autoload/               # Singletons: AudioManager, GameTheme, RunState, SaveData, ScreenTransition
-├── game/                   # Core: GameState, LevelDefs, LevelBuilder, PowerUpRegistry
-├── entities/               # Paddle, Ball, Brick, PowerUp, LaserBeam, LaserManager, RingEffect
+├── game/                   # GameState, LevelDefs, LevelBuilder, PowerUpRegistry
+├── entities/               # Paddle, Ball, Brick, PowerUp, LaserManager, LaserBeam, RingEffect, PlayfieldBorder
 ├── ui/                     # TitleScreen, HUD, Victory
 ├── shaders/                # brick_glow.gdshader, scanline.gdshader
 └── docs/                   # Readme, history, retro notes, agents guide
@@ -98,16 +66,31 @@ res://
 
 ## Implementation Notes
 
-- Built with **Godot 4.x** (GDScript), CharacterBody2D / StaticBody2D physics
-- Signals for decoupled communication (`life_lost`, `brick_hit`, `collected`, `destroyed`)
-- `GameState.Phase` enum drives all game logic transitions
-- Colors autoload singleton provides neon palette constants
-- Shaders compatible with ColorRect nodes
-- One-time setup pattern: `_run_setup()` called unconditionally in `_ready()` for signal wiring, timer creation, wall bounds before any run-starting dispatch
-- Tween lifecycle pattern: store Tween references in member variables; `.kill()` before creating new ones on the same properties to prevent racing Tweens
-- Callback injection pattern: inject `Callable` dependencies (e.g., `paddle.set_sticky_release_callback()`) instead of using `get_parent()` introspection
-- Unified hit result contract: `Brick.take_damage()` returns `{destroyed, awarded_points, score_points, remaining_hp, was_already_scored}` — all damage sources (ball, laser) consume the same dictionary
-- Laser manager setup pattern: `_setup_laser_manager()` centralizes paddle binding + phase gate; called from all lifecycle entry points (`_run_setup`, `_start_new_run`, `_load_level`, `_spawn_ball`, power-up branch)
+- **Engine**: Godot 4.x (GDScript), CharacterBody2D / StaticBody2D physics
+- **State machine**: `GameState.Phase` enum drives all game logic; `main.gd` owns transitions
+- **Communication**: Signals for decoupled events; `Callable` injection for behavior; avoid `get_parent()`/`has_method()` introspection
+- **Key patterns**: One-time setup (`_run_setup()`), tween lifecycle (store + kill), unified hit contract (`Brick.take_damage()` returns structured dict), deferred launch for paused-tree ball release
+- **ScreenTransition API**: Use `is_busy()` / `force_reset()` — never write `_busy` directly
+- **Sticky paddle**: `stick_ball()` returns `bool`; callers must check and fall through to normal bounce on `false`
+- **Paddle visual state**: `refresh_visual_state()` is the single authority for paddle color (Sticky → yellow, Big Paddle → lime, else cyan); power-up methods never write `sprite.color` directly
+- **Sticky aim guide**: `stick_ball()` shows the aim guide; `clear_sticky_aim()` on every release path; aim steers while a ball is caught
+- **Ball containment**: any screen exit counts as a loss (idempotent handler) + redundant bounds fallback in `_physics_process()` — no phantom balls
+- **Launch input suppression**: `suppress_launch_until_release` is set only on title-screen transition; flag clears on first release regardless of phase; normal READY states accept the next press immediately
+- **Ball adaptive substeps**: up to 96 steps per physics tick (`MAX_PHYSICS_STEPS`); residual move for severe frame hitches; prevents missed collisions in endless mode
+- **Rebound minimum upward**: paddle rebound enforces `MIN_UPWARD_COMPONENT = 0.38` to prevent shallow wall-rally loops
+- **Durable brick scoring**: non-lethal hits return `score_points = 0`; only destruction awards points; `refresh_damage_visuals()` updates persistent HP label, health bar, and progressive damage color
+- **Sticky context prompt**: `sticky_ball_caught` / `sticky_ball_released` signals drive a distinct "AIM WITH PADDLE" HUD prompt
+- **Power-up round-clear grace**: power-ups collected in the same frame as `ROUND_CLEAR` resolve their effects instead of being silently dropped
+- **Visual hierarchy**: standard bricks darkened 12% for idle state; hit flashes remain bright white; slow overlay reduced to 0.10 alpha
+- **Ball pop tween lifecycle**: `pop_tween` member stored, killed before recreate; squash/stretch `Vector2(1.16, 0.88) → Vector2.ONE` elastic; always begins from `Vector2.ONE`
+- **Feedback density caps**: max 2 score popups and 2 shake requests per physics frame; priority pass-through for scores ≥100; 28ms brick-hit audio cooldown
+- **AudioStreamPlayer pooling**: 12-player preallocated pool in `AudioManager`; round-robin reuse eliminates per-effect node allocation churn during dense gameplay
+- **Audio type safety**: all arrays and indexed collections explicitly typed (`Array[float]`, `float freq`); Master bus lookup validated with `push_warning` on missing bus
+- **ScreenTransition tween lifecycle**: `_fade_tween` member stored, killed before recreate; `force_reset()` kills in-flight fade
+- **Canvas scaling**: `stretch/mode="canvas_items"`, `stretch/aspect="keep"` for Retina/ultrawide support
+- **Teardown safety**: `is_instance_valid()` guards in `ball.attach_to_paddle()`, trail emitting reset on attach, `_exit_tree()` cleanup in `Ball` and `Brick` for tween kill
+- **Explicit scene typing**: `BALL_SCENE`/`BRICK_SCENE`/`POWERUP_SCENE` declared as `const X: PackedScene` — a missing or corrupt `.tscn` surfaces as one clear preload error instead of an inference cascade
+- **Scene section ordering**: `.tscn` files must declare all `[sub_resource]` blocks before any `[node]` blocks; a `sub_resource` after nodes fails parsing (`Unknown tag 'sub_resource'`) and breaks every `preload()` of that scene
 
 ---
 
@@ -119,4 +102,4 @@ res://
 
 ---
 
-*For session history, see [docs/history.md](history.md). For per-session detail, see `docs/retro_MMDD.md` files.*
+*Session history: [docs/history.md](history.md). Per-session detail: `docs/retro_MMDD.md`.*

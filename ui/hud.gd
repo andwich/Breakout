@@ -41,7 +41,7 @@ func _ready() -> void:
 	style.border_width_right = 1
 	style.border_width_top = 1
 	style.border_width_bottom = 1
-	style.border_color = Color(GameTheme.NEON_CYAN, 0.6)
+	style.border_color = Color(GameTheme.BORDER_SUBTLE, 0.6)
 	style.corner_radius_top_left = 8
 	style.corner_radius_top_right = 8
 	style.corner_radius_bottom_left = 8
@@ -56,7 +56,7 @@ func sync(score_value: int, lives_value: int, level_value: int, high_score_value
 
 func update_score(new_score: int) -> void:
 	score_label.text = "SCORE: %d" % new_score
-	score_label.reset_minimum_size()
+	score_label.reset_size()
 	score_label.pivot_offset = score_label.size / 2.0
 	if _score_tween and _score_tween.is_valid():
 		_score_tween.kill()
@@ -150,9 +150,11 @@ func hide_level_intro() -> void:
 	tw.tween_property(level_intro_panel, "modulate:a", 0.0, 0.15)
 	tw.tween_callback(func(): level_intro_panel.visible = false)
 
-func set_effect_timer(effect_id: String, label_text: String, duration_sec: float, tint: Color = Color(0.2, 1.0, 1.0)) -> void:
-	var row := _effect_rows.get(effect_id)
-	if row == null:
+func set_effect_timer(effect_id: String, label_text: String, duration_sec: float, tint: Color = Color(GameTheme.ACCENT)) -> void:
+	var row: Dictionary
+	if _effect_rows.has(effect_id):
+		row = _effect_rows[effect_id]
+	else:
 		row = _create_effect_row()
 		effect_list.add_child(row.root)
 		_effect_rows[effect_id] = row
@@ -228,3 +230,13 @@ func _create_effect_row() -> Dictionary:
 		"label": label,
 		"bar": bar,
 	}
+
+func show_context_prompt(text: String) -> void:
+	# Reuse the launch_prompt node for contextual feedback
+	launch_prompt.text = text
+	launch_prompt.visible = true
+
+func hide_context_prompt() -> void:
+	launch_prompt.visible = false
+	# Restore default text for next READY phase
+	launch_prompt.text = "Press SPACE or Click to Launch"

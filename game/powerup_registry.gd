@@ -7,7 +7,7 @@ const DEFS := {
 		"hud_label": "MULTIBALL",
 		"display_name": "Multiball",
 		"icon": "M",
-		"color": Color(1.0, 0.2, 0.8),
+		"color": Color(GameTheme.INFO),
 		"duration": 0.0,
 		"is_timed": false,
 		"description": "Spawns 2 clones per active ball",
@@ -18,7 +18,7 @@ const DEFS := {
 		"hud_label": "BIG PADDLE",
 		"display_name": "Big Paddle",
 		"icon": "B",
-		"color": Color(0.4, 1.0, 0.2),
+		"color": Color(GameTheme.SUCCESS),
 		"duration": 8.0,
 		"is_timed": true,
 		"description": "Expands paddle 1.6x",
@@ -40,7 +40,7 @@ const DEFS := {
 		"hud_label": "LASER",
 		"display_name": "Laser",
 		"icon": "L",
-		"color": Color(0.2, 1.0, 1.0),
+		"color": Color(GameTheme.ACCENT),
 		"duration": 8.0,
 		"is_timed": true,
 		"description": "Auto-fires beams every 0.3 sec",
@@ -74,7 +74,10 @@ static func get_def(ptype: PowerUp.Type) -> Dictionary:
 	return DEFS.get(ptype, {}).duplicate(true)
 
 static func all_types() -> Array[PowerUp.Type]:
-	return DEFS.keys()
+	var result: Array[PowerUp.Type] = []
+	for key in DEFS.keys():
+		result.append(key as PowerUp.Type)
+	return result
 
 static func ids() -> Array[String]:
 	var result: Array[String] = []

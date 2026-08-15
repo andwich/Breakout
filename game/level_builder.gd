@@ -28,11 +28,11 @@ const ROW_COLORS := [
 	Color(1.0, 0.1, 0.1),   # row 0 — red
 	Color(1.0, 0.5, 0.1),   # row 1 — orange
 	Color(1.0, 1.0, 0.2),   # row 2 — yellow
-	Color(0.4, 1.0, 0.2),   # row 3 — lime
-	Color(0.2, 1.0, 1.0),   # row 4 — cyan
-	Color(0.3, 0.5, 1.0),   # row 5 — blue
-	Color(0.6, 0.2, 1.0),   # row 6 — purple
-	Color(1.0, 0.2, 0.8),   # row 7 — magenta
+	Color(GameTheme.SUCCESS),   # row 3 — lime
+	Color(GameTheme.ACCENT),    # row 4 — cyan
+	Color(0.3, 0.5, 1.0),       # row 5 — blue
+	Color(GameTheme.BRICK_BOSS),# row 6 — purple
+	Color(GameTheme.INFO),      # row 7 — magenta
 	Color(0.9, 0.9, 0.9),   # row 8 — white
 	Color(0.6, 1.0, 0.8),   # row 9 — mint
 ]

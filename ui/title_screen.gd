@@ -22,8 +22,8 @@ func _ready() -> void:
 		var row := HBoxContainer.new()
 		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_theme_constant_override("separation", 24)
-		var left_type := left_types[i] if i < left_types.size() else null
-		var right_type := right_types[i] if i < right_types.size() else null
+		var left_type: Variant = left_types[i] if i < left_types.size() else null
+		var right_type: Variant = right_types[i] if i < right_types.size() else null
 		for t in [left_type, right_type]:
 			if t == null:
 				var spacer := Control.new()
@@ -33,14 +33,15 @@ func _ready() -> void:
 			var hbox := HBoxContainer.new()
 			hbox.custom_minimum_size = Vector2(120, 0)
 			var icon := PowerUpRegistry.icon_for(t)
-			var name := PowerUpRegistry.display_name_for(t)
+			var display_name := PowerUpRegistry.display_name_for(t)
+			var semantic := Color(PowerUpRegistry.color_for(t), 0.7)
 			var icon_label := Label.new()
 			icon_label.text = icon
-			icon_label.add_theme_color_override("font_color", PowerUpRegistry.color_for(t))
+			icon_label.add_theme_color_override("font_color", semantic)
 			icon_label.add_theme_font_size_override("font_size", 14)
 			var name_label := Label.new()
-			name_label.text = name
-			name_label.add_theme_color_override("font_color", Color(1.0, 1.0, 0.4, 1.0))
+			name_label.text = display_name
+			name_label.add_theme_color_override("font_color", semantic)
 			name_label.add_theme_font_size_override("font_size", 14)
 			hbox.add_child(icon_label)
 			hbox.add_child(name_label)
@@ -57,17 +58,13 @@ func _ready() -> void:
 var _title_glow_tween: Tween
 
 func _title_glow() -> void:
-	var colors := [
-		GameTheme.NEON_CYAN,
-		GameTheme.NEON_LIME,
-		GameTheme.NEON_MAGENTA,
-		GameTheme.NEON_YELLOW,
-	]
+	# Calm "breathing" pulse: slow gentle alpha fade on one primary color,
+	# no hue shifting.
 	_title_glow_tween = create_tween().set_loops()
-	for c in colors:
-		_title_glow_tween.tween_property(title_label, "modulate",
-			Color(c.r, c.g, c.b, 1.0), 0.55)
-	_title_glow_tween.tween_interval(0.3)
+	_title_glow_tween.set_trans(Tween.TRANS_SINE)
+	_title_glow_tween.set_ease(Tween.EASE_IN_OUT)
+	_title_glow_tween.tween_property(title_label, "modulate:a", 0.72, 1.8)
+	_title_glow_tween.tween_property(title_label, "modulate:a", 1.0, 1.8)
 
 func _spawn_bg_particles() -> void:
 	var particles := GPUParticles2D.new()
@@ -85,7 +82,7 @@ func _spawn_bg_particles() -> void:
 	mat.spread = 180.0
 	mat.scale_min = 1.0
 	mat.scale_max = 2.5
-	var pc := GameTheme.NEON_CYAN
+	var pc := Color(0.2, 0.25, 0.4, 1.0)
 	pc.a = 0.06
 	mat.color = pc
 	mat.lifetime_randomness = 0.5

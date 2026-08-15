@@ -5,8 +5,11 @@ signal life_lost
 signal brick_hit(points: int)
 signal paddle_hit
 
+const MAX_STEP_DISTANCE := 6.0
+const MAX_PHYSICS_STEPS := 96
+
 @export var base_speed: float = 350.0
-@export var ball_color: Color = Color(1.0, 1.0, 0.6):
+@export var ball_color: Color = GameTheme.BALL:
 	set(v):
 		ball_color = v
 		_update_trail_color()
@@ -14,6 +17,7 @@ signal paddle_hit
 var speed: float = base_speed
 var launched := false
 var paddle: Paddle
+var pop_tween: Tween
 var _stuck_frames: int = 0
 var _last_pos: Vector2
 var _last_velocity: Vector2
@@ -47,7 +51,9 @@ func attach_to_paddle() -> void:
 	launched = false
 	velocity = Vector2.ZERO
 	_stuck_frames = 0
-	if paddle:
+	if _trail:
+		_trail.emitting = false
+	if is_instance_valid(paddle):
 		global_position = paddle.global_position + Vector2(0, -paddle.get_ball_attach_offset())
 	_last_pos = global_position
 	_last_velocity = Vector2.ZERO
@@ -74,6 +80,15 @@ func _physics_process(delta: float) -> void:
 	if not launched:
 		return
 
+	var viewport_size := get_viewport_rect().size
+	var escape_margin := 64.0
+	if global_position.x < -escape_margin \
+			or global_position.x > viewport_size.x + escape_margin \
+			or global_position.y < -escape_margin \
+			or global_position.y > viewport_size.y + escape_margin:
+		_on_screen_exited()
+		return
+
 	var dist := global_position.distance_squared_to(_last_pos)
 	_last_pos = global_position
 	if dist < 1.0:
@@ -85,21 +100,25 @@ func _physics_process(delta: float) -> void:
 	else:
 		_stuck_frames = 0
 
-	var max_step_dist := 6.0
 	var travel := velocity * delta
 	var remaining := travel.length()
-	var direction := travel.normalized()
+	if remaining <= 0.01:
+		return
+
+	var direction := travel / remaining
 	var collision: KinematicCollision2D
 	var steps := 0
-	var max_steps := 10
 
-	while remaining > 0.01 and steps < max_steps:
-		var step_dist := mini(max_step_dist, remaining)
+	while remaining > 0.01 and steps < MAX_PHYSICS_STEPS:
+		var step_dist := minf(MAX_STEP_DISTANCE, remaining)
 		collision = move_and_collide(direction * step_dist)
 		if collision:
 			break
 		remaining -= step_dist
 		steps += 1
+
+	if remaining > 0.01 and collision == null:
+		move_and_collide(direction * remaining)
 
 	_last_velocity = velocity
 	if not collision:
@@ -109,9 +128,12 @@ func _physics_process(delta: float) -> void:
 	var normal := collision.get_normal()
 
 	if collider is Brick:
-		var hit := collider.take_damage(1)
+		var brick := collider as Brick
+		var hit: Dictionary = brick.take_damage(1)
+
 		if hit.get("was_already_scored", false):
 			return
+
 		velocity = velocity.bounce(normal)
 		_clamp_min_speed()
 		_pop_visual()
@@ -121,16 +143,19 @@ func _physics_process(delta: float) -> void:
 	if collider is Paddle:
 		paddle_hit.emit()
 		_pop_visual()
-		var p := collider as Paddle
+		var p: Paddle = collider as Paddle
 		if p.sticky_mode:
-			p.stick_ball(self)
-			launched = false
-			velocity = Vector2.ZERO
-			return
-		var hit_ratio := (global_position.x - p.global_position.x) / (p.target_width / 2.0)
+			if p.stick_ball(self):
+				launched = false
+				velocity = Vector2.ZERO
+				return
+			# paddle already has a caught ball — treat as normal bounce
+		var hit_ratio: float = (global_position.x - p.global_position.x) / (p.target_width / 2.0)
 		hit_ratio = clampf(hit_ratio, -1.0, 1.0)
-		var aim := Vector2(hit_ratio * 0.9, -1.0).normalized()
-		velocity = aim * velocity.length()
+		var aim := Vector2(hit_ratio * 0.82, -1.0).normalized()
+		aim.y = minf(aim.y, -0.38)
+		aim = aim.normalized()
+		velocity = aim * speed
 		_clamp_min_speed()
 		return
 	else:
@@ -139,16 +164,22 @@ func _physics_process(delta: float) -> void:
 
 
 func _clamp_min_speed() -> void:
-	if absf(velocity.y) < 50.0:
-		velocity.y = 50.0 if velocity.y >= 0.0 else -50.0
-	if velocity.x != 0.0 and absf(velocity.x) < 50.0:
-		velocity.x = signf(velocity.x) * 50.0
+	if velocity.length_squared() < 0.01:
+		velocity = Vector2.UP * speed
+		return
 	velocity = velocity.normalized() * speed
 
 func _pop_visual() -> void:
-	var tw := create_tween()
-	tw.tween_property(self, "scale", Vector2(1.3, 1.3), 0.03)
-	tw.tween_property(self, "scale", Vector2(1.0, 1.0), 0.08)
+	if pop_tween and pop_tween.is_valid():
+		pop_tween.kill()
+	scale = Vector2.ONE
+	pop_tween = create_tween()
+	pop_tween.set_trans(Tween.TRANS_QUAD)
+	pop_tween.set_ease(Tween.EASE_OUT)
+	pop_tween.tween_property(self, "scale", Vector2(1.16, 0.88), 0.035)
+	pop_tween.set_trans(Tween.TRANS_ELASTIC)
+	pop_tween.set_ease(Tween.EASE_OUT)
+	pop_tween.tween_property(self, "scale", Vector2.ONE, 0.095)
 
 func _draw() -> void:
 	var bright := ball_color.lightened(0.3)
@@ -157,7 +188,13 @@ func _draw() -> void:
 	draw_circle(Vector2.ZERO, 8.0, ball_color)
 
 func _on_screen_exited() -> void:
-	if global_position.y > get_viewport_rect().size.y + 20.0:
-		launched = false
-		life_lost.emit()
-		queue_free()
+	if not launched:
+		return
+	launched = false
+	velocity = Vector2.ZERO
+	life_lost.emit()
+	queue_free()
+
+func _exit_tree() -> void:
+	if pop_tween and pop_tween.is_valid():
+		pop_tween.kill()

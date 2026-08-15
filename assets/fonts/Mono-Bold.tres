@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="FontFile" uid="uid://du0xr7a8mypq" path="res://.godot/imported/Mono-Bold.ttf-cfbf6e98bb12e8ea03c07e0740081654.fontdata" id="1_font"]
+
+[node name="MonoBold" type="FontFile"]
+data = ExtResource("1_font")
+size = 48

@@ -12,7 +12,6 @@ var _fire_timer: Timer
 var _duration_timer: Timer
 var _paddle: Paddle
 var _check_can_fire: Callable
-var _paddle_aim_visible: bool = false
 
 func set_can_fire_check(check: Callable) -> void:
 	_check_can_fire = check
@@ -31,11 +30,6 @@ func _ready() -> void:
 
 func set_paddle(paddle: Paddle) -> void:
 	_paddle = paddle
-	_sync_paddle_aim()
-
-func _sync_paddle_aim() -> void:
-	if is_instance_valid(_paddle) and _paddle.has_method("set_laser_aim_visible"):
-		_paddle.set_laser_aim_visible(_active)
 
 func _clear_live_beams() -> void:
 	for child in get_children():
@@ -64,17 +58,20 @@ func _fire_laser() -> void:
 	add_child(laser)
 	laser_fired.emit()
 
-	laser.body_entered.connect(func(body):
+	laser.body_entered.connect(func(body: Node2D) -> void:
 		if body is Brick:
-			if body.is_scored():
+			var brick := body as Brick
+
+			if brick.is_scored():
 				laser.queue_free()
 				return
-			var hit := body.take_damage(1)
+
+			var hit: Dictionary = brick.take_damage(1)
 			if hit.get("was_already_scored", false):
 				laser.queue_free()
 				return
+
 			brick_scored.emit(int(hit.get("score_points", 0)))
+
 		laser.queue_free()
 	, CONNECT_ONE_SHOT)
-
-

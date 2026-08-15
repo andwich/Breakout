@@ -10,6 +10,7 @@ signal damaged(hp_remaining: int)
 @export var is_boss: bool = false
 @export var brick_type: String = "standard"
 @export var row_color: Color = Color.WHITE
+var base_color: Color
 
 var _hp: int
 var _shader_mat: ShaderMaterial
@@ -22,7 +23,7 @@ const GLOW_SHADER := preload("res://shaders/brick_glow.gdshader")
 const SCAN_SHADER := preload("res://shaders/scanline.gdshader")
 
 @onready var _collision: CollisionShape2D = $CollisionShape2D
-@onready var _hp_label: Label = $HP_Label
+@onready var _hp_label: Label = $Sprite/HP_Label
 @onready var _particles: GPUParticles2D = $Particles
 @onready var _sprite: ColorRect = $Sprite
 var _health_bar: ColorRect
@@ -35,18 +36,23 @@ func _ready():
 	_hp = max_hp
 	match brick_type:
 		"metal":
+			base_color = GameTheme.BRICK_DURABLE
 			_shader_mat = ShaderMaterial.new()
 			_shader_mat.shader = SCAN_SHADER
 			_shader_mat.set_shader_parameter("frequency", 40.0)
 			_shader_mat.set_shader_parameter("intensity", 0.15)
 			_sprite.material = _shader_mat
 		"boss":
+			base_color = GameTheme.BRICK_BOSS
 			_shader_mat = ShaderMaterial.new()
 			_shader_mat.shader = GLOW_SHADER
 			_shader_mat.set_shader_parameter("glow_intensity", 2.0)
-			_shader_mat.set_shader_parameter("glow_color", row_color)
+			_shader_mat.set_shader_parameter("glow_color", GameTheme.BRICK_BOSS)
 			_sprite.material = _shader_mat
+		_:
+			base_color = GameTheme.BRICK_STANDARD
 	_update_visual()
+	refresh_damage_visuals()
 	if is_boss:
 		_health_bar_bg = ColorRect.new()
 		_health_bar_bg.size = Vector2(40, 4)
@@ -56,7 +62,7 @@ func _ready():
 		_health_bar = ColorRect.new()
 		_health_bar.size = Vector2(40, 4)
 		_health_bar.position = Vector2(-20, 16)
-		_health_bar.color = row_color
+		_health_bar.color = GameTheme.BRICK_BOSS
 		add_child(_health_bar)
 	if is_boss and _shader_mat:
 		_boss_glow_tween = create_tween()
@@ -78,11 +84,12 @@ func take_damage(amount: int = 1) -> Dictionary:
 	_update_visual()
 
 	if _hp > 0:
+		refresh_damage_visuals()
 		if _particles:
 			_particles.emitting = true
 		if brick_type == "boss":
 			var hp_ratio := float(_hp) / float(max_hp)
-			var target_color := row_color.darkened(1.0 - clampf(hp_ratio, 0.3, 1.0))
+			var target_color := GameTheme.BRICK_BOSS.darkened(1.0 - clampf(hp_ratio, 0.3, 1.0))
 			if _flash_tween and _flash_tween.is_valid():
 				_flash_tween.kill()
 			_flash_tween = create_tween()
@@ -115,7 +122,7 @@ func take_damage(amount: int = 1) -> Dictionary:
 	return {
 		"destroyed": false,
 		"awarded_points": 0,
-		"score_points": 1,
+		"score_points": 0,
 		"remaining_hp": _hp,
 		"was_already_scored": false,
 	}
@@ -135,6 +142,18 @@ func destroy():
 		vfx.global_position = global_position
 	queue_free()
 
+func refresh_damage_visuals() -> void:
+	if max_hp <= 1:
+		return
+	var health_ratio := clampf(float(_hp) / float(max_hp), 0.0, 1.0)
+	if _hp_label:
+		_hp_label.text = str(_hp)
+		_hp_label.visible = true
+	if _health_bar:
+		_health_bar.size.x = 56.0 * health_ratio
+	if _sprite and brick_type == "standard":
+		_sprite.color = GameTheme.BRICK_STANDARD.darkened((1.0 - health_ratio) * 0.16)
+
 func _update_visual():
 	if _hp_label:
 		_hp_label.text = str(_hp)
@@ -142,7 +161,7 @@ func _update_visual():
 	match brick_type:
 		"boss":
 			var hp_ratio := float(_hp) / float(max_hp)
-			var dimmed := row_color.darkened(1.0 - clampf(hp_ratio, 0.3, 1.0))
+			var dimmed := GameTheme.BRICK_BOSS.darkened(1.0 - clampf(hp_ratio, 0.3, 1.0))
 			if _health_bar:
 				_health_bar.size.x = 40.0 * hp_ratio
 			if _sprite:
@@ -165,9 +184,14 @@ func _update_visual():
 		_:
 			if _sprite:
 				_sprite.material = null
-				_sprite.color = row_color.lerp(Color.WHITE, 0.08)
+				_sprite.color = GameTheme.BRICK_STANDARD.darkened(0.12).lerp(Color.WHITE, 0.05)
 			if _particles:
 				var pm := _particles.process_material as ParticleProcessMaterial
 				if pm:
-					pm.color = row_color
+					pm.color = GameTheme.BRICK_STANDARD
 			modulate.a = 0.92
+
+func _exit_tree() -> void:
+	for tween in [_flash_tween, _scale_tween, _boss_glow_tween]:
+		if is_instance_valid(tween):
+			tween.kill()

@@ -9,9 +9,9 @@ func _ready() -> void:
 	)
 
 func _draw() -> void:
-	var neon := Color(GameTheme.NEON_CYAN, 0.3)
-	var dim := Color(GameTheme.NEON_CYAN, 0.08)
-	var bright := Color(GameTheme.NEON_CYAN, 0.5)
+	var dim := Color(GameTheme.BORDER_SUBTLE, 0.6)
+	var neon := Color(GameTheme.BORDER_SUBTLE, 1.0)
+	var bright := Color(GameTheme.BORDER_STRONG, 1.0)
 
 	draw_rect(Rect2(Vector2.ZERO, _size), dim, false, 3.0)
 	draw_rect(Rect2(Vector2.ZERO, _size), neon, false, 1.0)

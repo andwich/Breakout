@@ -10,7 +10,7 @@ signal collected(power_type: Type, duration_sec: float)
 
 var _drift_phase: float
 
-@onready var _symbol_label: Label = $SymbolLabel
+@onready var _symbol_label: Label = $Sprite/SymbolLabel
 @onready var _sprite: ColorRect = $Sprite
 
 func _ready():

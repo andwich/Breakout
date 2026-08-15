@@ -4,7 +4,7 @@ extends Node2D
 var _radius: float = 20.0
 var _color: Color = Color.WHITE
 
-func play(at: Vector2, color: Color, start_radius: float = 20.0, expand_to: float = 3.0, duration: float = 0.3) -> void:
+func play(at: Vector2, color: Color, start_radius: float = 14.0, expand_to: float = 2.0, duration: float = 0.18) -> void:
 	global_position = at
 	_color = color
 	_radius = start_radius

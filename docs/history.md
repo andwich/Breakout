@@ -2,6 +2,80 @@
 
 ---
 
+## Session 27 (2026-08-10) — Feedback 0810 2225 fixes
+
+- **4 changes across 3 files** — root-cause scene corruption fix + explicit typing hardening from `docs/Feedback 0810 2225.md`
+- **Critical (1)**: `entities/ball.tscn` — `[sub_resource]` (ParticleProcessMaterial_trail) was declared after `[node]` sections, violating Godot's required section ordering; the file failed to parse (`Unknown tag 'sub_resource'`), which broke the `BALL_SCENE` preload and cascaded into the reported "Cannot infer the type" errors. Sections reordered to canonical `ext_resource → sub_resource → node`. Same fix applied to the separate Production checkout the editor was pointed at.
+- **Low (3)**: `main.gd` — typed `BALL_SCENE`/`BRICK_SCENE`/`POWERUP_SCENE` as `PackedScene`; typed `orig_y` as `float` in `_animate_brick_entrance()`; typed `decay` as `float` in `_shake_camera()` tween lambda. `ui/hud.gd` — typed `row` as `Dictionary` in `set_effect_timer()` (inference-from-Variant warning surfaced once the preload error cleared).
+- **Files**: `entities/ball.tscn`, `main.gd`, `ui/hud.gd`
+- **Docs**: `docs/retro_0810.md` created, `docs/readme.md` updated, `docs/agents.md` updated, `docs/history.md` updated, `docs/changelog.md` updated, `docs/architecture.md` updated
+
+## Session 26 (2026-08-09) — Feedback 0809 1445 hardening pass
+
+- **10 changes across 6 files** — compile hardening, reliability, and teardown safety from `docs/Feedback 0809 1445.md`
+- **P0 (1)**: `autoload/audio_manager.gd` — typed `notes` as `Array[float]` and `freq` as `float` in `play_powerup()`. Fixes Godot 4 static analyzer failure on `:=` inference from untyped Array index.
+- **P1 (4)**: `autoload/audio_manager.gd` — typed `_make_chord(freqs: Array[float], ...)` parameter and loop variable; added `_master_bus_index()` helper with `push_warning` on missing bus; preallocated 12-player AudioStreamPlayer pool with round-robin reuse. `autoload/save_data.gd` — added `file.close()` after read/write; `push_warning` on null file handles; `parsed is Dictionary` type check; `max(0, int(...))` guard.
+- **P2 (2)**: `autoload/screen_transition.gd` — added `_fade_tween` member and `_replace_fade_tween()` helper; `force_reset()` kills the fade tween. `project.godot` — added `canvas_items` stretch mode with `keep` aspect for Retina/ultrawide support.
+- **P3 (3)**: `entities/ball.gd` — `attach_to_paddle()` uses `is_instance_valid(paddle)` guard and stops trail emitting; added `_exit_tree()` for pop tween cleanup. `main.gd` — added `_flash_tween`/`_slow_tween` members with kill-before-create in all overlay tween sites; cleanup + alpha reset in `_start_new_run()`. `entities/brick.gd` — added `_exit_tree()` that kills flash/scale/boss-glow tweens.
+- **Files**: `autoload/audio_manager.gd`, `autoload/save_data.gd`, `autoload/screen_transition.gd`, `project.godot`, `entities/ball.gd`, `main.gd`, `entities/brick.gd`
+- **Docs**: `docs/retro_0809.md` created, `docs/readme.md` updated, `docs/agents.md` updated, `docs/history.md` updated, `docs/changelog.md` updated, `docs/architecture.md` updated
+
+## Session 25 (2026-08-09) — Feedback 0809 0035 fixes
+
+- **6 changes across 4 files** — full rollout of issues from `docs/Feedback 0809 0035.md`
+- **High (3)**: `main.gd` — removed `phase == READY` guard from `suppress_launch_until_release` block; flag now clears on first release regardless of phase, fixing two-press-start defect. `entities/ball.gd` — stored `pop_tween` member with kill-before-create; replaced uniform scale pop with squash/stretch (`Vector2(1.16, 0.88) → Vector2.ONE` elastic). `autoload/audio_manager.gd` — added 28ms cooldown between brick-hit sounds to prevent harsh click bursts during rapid laser destruction.
+- **Medium (3)**: `main.gd` — added per-frame caps (2 score popups, 2 shake requests); `try_spawn_score_popup()` and `try_shake_camera()` helpers with priority pass-through for large scores. `entities/brick.gd` — added `refresh_damage_visuals()` for persistent damage state (HP label, health bar, progressive color darkening on standard bricks). `main.gd` — shortened sticky prompt to "AIM • RELEASE TO FIRE".
+- **Files**: `main.gd`, `entities/ball.gd`, `entities/brick.gd`, `autoload/audio_manager.gd`
+- **Docs**: `docs/retro_0809.md` created, `docs/readme.md` updated, `docs/agents.md` updated, `docs/history.md` updated, `docs/changelog.md` updated, `docs/architecture.md` updated
+
+## Session 24 (2026-08-08) — Feedback 0807 1350 fixes
+
+- **8 changes across 6 files** — full rollout of issues from `docs/Feedback 0807 1350.md`
+- **High (4)**: `main.gd` — renamed `launch_input_armed` → `suppress_launch_until_release`; only suppresses after title-screen transition; normal READY states accept next press immediately. `entities/ball.gd` — adaptive substeps (up to 96 steps/tick + residual move for frame hitches). `entities/ball.gd` — rebound tuning: `MIN_UPWARD_COMPONENT = 0.38`, horizontal factor 0.9→0.82, simplified `_clamp_min_speed()`. `entities/brick.gd` + `main.gd` — non-lethal durable-brick hits return `score_points = 0`; combo/score skipped for `points <= 0`.
+- **Medium (4)**: `entities/paddle.gd` + `main.gd` + `ui/hud.gd` — sticky ball caught/released signals drive "AIM WITH PADDLE • STICKY RELEASE AUTO-FIRES" context prompt. `main.gd` — `_on_powerup_collected()` accepts `ROUND_CLEAR` phase for in-flight power-up grace. `entities/brick.gd` — standard bricks darkened 12% at idle. `main.gd` — slow overlay alpha 0.18→0.10.
+- **Files**: `main.gd`, `entities/ball.gd`, `entities/brick.gd`, `entities/paddle.gd`, `ui/hud.gd`
+- **Docs**: `docs/retro_0808.md` created, `docs/readme.md` updated, `docs/agents.md` updated, `docs/history.md` updated, `docs/changelog.md` updated, `docs/architecture.md` updated
+
+---
+
+## Session 23 (2026-08-06) — Feedback 0806 1530 fixes
+
+- **6 changes across 5 files** — full rollout of issues from `docs/Feedback 0806 1530.md`
+- **Medium (1)**: `paddle.gd` — added `refresh_visual_state()` as the single authority for paddle color (Sticky → `NEON_YELLOW`, Big Paddle → `NEON_LIME`, else `NEON_CYAN`); removed all direct `sprite.color` writes from `apply_big_paddle()`, `_reset_paddle_width()`, `enable_sticky()`, `_disable_sticky()`, `reset()`. Fixes Sticky-expiry clobbering the Big Paddle lime tint.
+- **Low (1)**: `paddle.gd` — Sticky-catch aim guide wired up: `stick_ball()` sets `show_aim = true`; `clear_sticky_aim()` on every release path (immediate launch in `_disable_sticky()`, deferred launch in `_process()`); `draw_aim` simplified to `show_aim`; aim steers while a ball is caught (supersedes Session 19's aim-freeze during Sticky).
+- **Low (1)**: `ball.gd` — `_on_screen_exited()` treats any exit as a loss (idempotent via `if not launched: return`) + redundant 64px bounds fallback in `_physics_process()`. Eliminates phantom-ball soft-lock risk.
+- **Low (1)**: `audio_manager.gd` — `play_powerup()` envelope uses `local_t` for per-note articulation (was a global fade).
+- **Low (1)**: `main.gd` — launch-input arming: `launch_input_armed` requires the launch action to be released after entering READY before a press can launch. Reset in `_begin_ready_phase()`, `_reset_round_after_life_loss()`, `_launch_waiting_ball()`.
+- **Low (1)**: `main.gd` + `main.tscn` — removed dead `score_sfx` var + `ScoreSfx` node (no stream, never played) and unused `_get_phase()`.
+- **Files**: `entities/paddle.gd`, `entities/ball.gd`, `autoload/audio_manager.gd`, `main.gd`, `main.tscn`
+- **Docs**: `docs/retro_0806.md` updated, `docs/readme.md` updated, `docs/agents.md` updated, `docs/history.md` updated, `docs/changelog.md` updated, `docs/architecture.md` updated
+
+---
+
+## Session 21 (2026-07-06) — Feedback 0706 2120 fixes
+
+- **6 changes across 4 files** — full rollout of issues from `docs/Feedback 0706 2120.md`
+- **Critical (1)**: `paddle.gd` — `stick_ball()` now returns `bool`; `ball.gd` — sticky catch is conditional on success, falling through to normal paddle-bounce when paddle already has a caught ball. Fixes silent ball freeze in Multiball + Sticky combo.
+- **High (1)**: `screen_transition.gd` — added `is_busy()` and `force_reset()` public API; `main.gd` — replaced direct `_busy` access with public methods. Prevents stuck black overlay on game over.
+- **Medium (1)**: `main.gd` — `_start_new_run()` now resets `_combo_count`, `_combo_timer`, `_combo_tween`, `_combo_label`, `_shake_tween`, `_shake_intensity`, and `position` to baseline. Prevents combo/shake state leaking across runs.
+- **Low (1)**: `title_screen.gd` — renamed local `name` → `display_name` to avoid shadowing `Node.name`.
+- **Low (1, no action)**: `hud.tscn` — `HighScoreLabel` text already `""`, no change needed.
+- **Files**: `entities/paddle.gd`, `entities/ball.gd`, `autoload/screen_transition.gd`, `main.gd`, `ui/title_screen.gd`
+- **Docs**: `docs/retro_0706.md` created, `docs/readme.md` updated, `docs/agents.md` updated, `docs/history.md` updated
+
+---
+
+## Session 20 (2026-06-28) — Feedback 0628 2200 fixes
+
+- **4 changes across 2 files** — full rollout of issues from `docs/Feedback 0628 2200.md`
+- **Medium (1)**: `main.gd` — `_setup_laser_manager()` split into `_bind_laser_manager()` (idempotent paddle + phase gate) and `_update_wall_bounds()` (wall clamp computation). Timer/Label/ColorRect creation moved into `_run_setup()` (one-time). Eliminates orphaned node leak that fired every ball spawn in Endless Mode.
+- **Low (2)**: `main.gd` — simplified `is_last_story_level` to single comparison; replaced silent-no-op on victory transition busy with `while` retry loop.
+- **Low (1, no action)**: Power-up icon rotation already resolved in Session 17 (SymbolLabel nested under Sprite).
+- **Files**: `main.gd`, `docs/agents.md`
+- **Docs**: `docs/retro_0628.md` created, `docs/readme.md` updated, `docs/history.md` updated
+
+---
+
 ## Session 19 (2026-06-26) — Feedback 0626 1727 fixes
 
 - **8 changes across 5 files (+ docs)** — full rollout of 8 items from `docs/Feedback 0626 1727.md`
@@ -204,3 +278,16 @@
 ---
 
 *See individual `docs/retro_MMDD.md` files for per-session detail.*
+
+---
+
+## Session 21 (2026-07-06) — Feedback 0706 2120 fixes
+
+- **6 changes across 4 files** — full rollout of issues from `docs/Feedback 0706 2120.md`
+- **Critical (1)**: `paddle.gd` — `stick_ball()` now returns `bool`; `ball.gd` — sticky catch is conditional on success, falling through to normal paddle-bounce when paddle already has a caught ball. Fixes silent ball freeze in Multiball + Sticky combo.
+- **High (1)**: `screen_transition.gd` — added `is_busy()` and `force_reset()` public API; `main.gd` — replaced direct `_busy` access with public methods. Prevents stuck black overlay on game over.
+- **Medium (1)**: `main.gd` — `_start_new_run()` now resets `_combo_count`, `_combo_timer`, `_combo_tween`, `_combo_label`, `_shake_tween`, `_shake_intensity`, and `position` to baseline. Prevents combo/shake state leaking across runs.
+- **Low (1)**: `title_screen.gd` — renamed local `name` → `display_name` to avoid shadowing `Node.name`.
+- **Low (1, no action)**: `hud.tscn` — `HighScoreLabel` text already `""`, no change needed.
+- **Files**: `entities/paddle.gd`, `entities/ball.gd`, `autoload/screen_transition.gd`, `main.gd`, `ui/title_screen.gd`
+- **Docs**: `docs/retro_0706.md` created, `docs/readme.md` updated, `docs/agents.md` updated, `docs/history.md` updated
