@@ -35,18 +35,7 @@ func _ready() -> void:
 	level_intro_panel.visible = false
 	_clear_effect_rows()
 
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.08, 0.05, 0.15, 0.88)
-	style.border_width_left = 1
-	style.border_width_right = 1
-	style.border_width_top = 1
-	style.border_width_bottom = 1
-	style.border_color = Color(GameTheme.BORDER_SUBTLE, 0.6)
-	style.corner_radius_top_left = 8
-	style.corner_radius_top_right = 8
-	style.corner_radius_bottom_left = 8
-	style.corner_radius_bottom_right = 8
-	level_intro_panel.add_theme_stylebox_override("panel", style)
+	level_intro_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 
 func sync(score_value: int, lives_value: int, level_value: int, high_score_value: int) -> void:
 	update_score(score_value)
@@ -129,7 +118,8 @@ func show_game_over(show: bool, final_score: int = 0) -> void:
 func show_level_complete(show: bool, level: int = 0) -> void:
 	level_complete_label.visible = show
 	if show:
-		level_complete_label.text = "LEVEL %d CLEAR" % level
+		level_complete_label.text = "LEVEL COMPLETED!"
+		level_complete_label.add_theme_color_override("font_color", GameTheme.WARNING)
 		level_complete_label.scale = Vector2(0.5, 0.5)
 		level_complete_label.modulate.a = 0.0
 		var tw := create_tween()
@@ -137,13 +127,17 @@ func show_level_complete(show: bool, level: int = 0) -> void:
 		tw.parallel().tween_property(level_complete_label, "modulate:a", 1.0, 0.2)
 
 func show_level_intro(title: String, subtitle: String = "") -> void:
-	level_intro_title.text = title
-	level_intro_subtitle.text = subtitle
-	level_intro_subtitle.visible = not subtitle.is_empty()
+	level_intro_title.text = "GO!"
+	level_intro_title.add_theme_color_override("font_color", GameTheme.SUCCESS)
+	level_intro_subtitle.text = ""
+	level_intro_subtitle.visible = false
 	level_intro_panel.modulate.a = 0.0
 	level_intro_panel.visible = true
+	level_intro_title.scale = Vector2(0.78, 0.78)
+	level_intro_title.pivot_offset = level_intro_title.size * 0.5
 	var tw := create_tween()
-	tw.tween_property(level_intro_panel, "modulate:a", 1.0, 0.2)
+	tw.tween_property(level_intro_panel, "modulate:a", 1.0, 0.08)
+	tw.parallel().tween_property(level_intro_title, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 func hide_level_intro() -> void:
 	var tw := create_tween()

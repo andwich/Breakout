@@ -5,8 +5,15 @@ static func base_levels() -> Array[Dictionary]:
 	return [
 		{
 			"name": "Opening Volley",
-			"intro_text": "Learn the rebound angle and settle into the pace.",
-			"cols": 8, "rows": 4,
+			"intro_text": "",
+			"cols": 10,
+			"rows": 4,
+			"layout": [
+				"##########",
+				"##########",
+				"##########",
+				"##########",
+			],
 			"speed_mult": 1.0,
 			"boss_hp": 0,
 			"metal_hp": 0,
@@ -18,12 +25,20 @@ static func base_levels() -> Array[Dictionary]:
 				PowerUp.Type.MULTIBALL: 1,
 				PowerUp.Type.LASER: 1,
 				PowerUp.Type.EXTRA_LIFE: 1,
-			}
+			},
 		},
 		{
 			"name": "Controlled Angles",
-			"intro_text": "Sticky catches matter more than raw speed here.",
-			"cols": 10, "rows": 5,
+			"intro_text": "",
+			"cols": 10,
+			"rows": 5,
+			"layout": [
+				"#######.##",
+				"#####.....",
+				"###.......",
+				"###.......",
+				"###.......",
+			],
 			"speed_mult": 1.1,
 			"boss_hp": 0,
 			"metal_hp": 0,
@@ -35,7 +50,7 @@ static func base_levels() -> Array[Dictionary]:
 				PowerUp.Type.MULTIBALL: 2,
 				PowerUp.Type.LASER: 1,
 				PowerUp.Type.EXTRA_LIFE: 1,
-			}
+			},
 		},
 		{
 			"name": "Metal Core",
@@ -52,7 +67,7 @@ static func base_levels() -> Array[Dictionary]:
 				PowerUp.Type.MULTIBALL: 2,
 				PowerUp.Type.STICKY: 2,
 				PowerUp.Type.EXTRA_LIFE: 1,
-			}
+			},
 		},
 		{
 			"name": "Boss Gate",
@@ -69,7 +84,7 @@ static func base_levels() -> Array[Dictionary]:
 				PowerUp.Type.STICKY: 2,
 				PowerUp.Type.SLOW_BALLS: 2,
 				PowerUp.Type.EXTRA_LIFE: 1,
-			}
+			},
 		},
 		{
 			"name": "Breach Point",
@@ -86,7 +101,7 @@ static func base_levels() -> Array[Dictionary]:
 				PowerUp.Type.STICKY: 2,
 				PowerUp.Type.SLOW_BALLS: 2,
 				PowerUp.Type.EXTRA_LIFE: 2,
-			}
+			},
 		},
 	]
 

@@ -86,7 +86,7 @@ func _run_setup() -> void:
 	_combo_label.visible = false
 	_combo_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_combo_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	_combo_label.add_theme_color_override("font_color", Color(1.0, 1.0, 0.4, 1.0))
+	_combo_label.add_theme_color_override("font_color", GameTheme.WARNING)
 	_combo_label.add_theme_font_size_override("font_size", 28)
 	_combo_label.anchor_left = 0.5
 	_combo_label.anchor_right = 0.5

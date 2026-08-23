@@ -76,7 +76,7 @@ res://
 | Autoload | Purpose |
 |----------|---------|
 | `AudioManager` | Synthesized sound effects (8 tones, pentatonic/musical scales) |
-| `GameTheme` | Semantic color palette (ACCENT, SUCCESS, INFO, etc.) |
+| `GameTheme` | Neon arcade palette (ACCENT=cyan, SUCCESS=green, WARNING=yellow, DANGER=magenta, BACKGROUND=near-black) |
 | `RunState` | Transient session state |
 | `SaveData` | High score persistence |
 | `ScreenTransition` | Scene fades (`is_busy()`, `force_reset()` public API) |
@@ -106,8 +106,9 @@ res://
 
 ### Modifying Levels
 
-- Edit `game/level_defs.gd::base_levels()`
-- Endless mode: `game/level_defs.gd::config_for_level()`
+- Edit `game/level_defs.gd::base_levels()` — optional `layout` string mask (`#`=brick, `.`=hole) per level
+- Endless mode: `game/level_defs.gd::config_for_level()` — no layout mask (full rectangular grid)
+- `level_builder.gd::_cell_is_filled()` returns `true` when `layout` is empty (backward compat)
 
 ---
 

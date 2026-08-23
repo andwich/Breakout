@@ -1,34 +1,36 @@
 extends Node
 
 
-# Workspace surfaces
-const BACKGROUND := Color("#0B0D12")
-const SURFACE := Color("#121722")
-const SURFACE_ELEVATED := Color("#1A2130")
-const BORDER_SUBTLE := Color("#2B3445")
-const BORDER_STRONG := Color("#44516A")
+# Playfield and chrome
+const BACKGROUND := Color("#03050B")
+const SURFACE := Color("#070B14")
+const SURFACE_ELEVATED := Color("#0A1020")
+const BORDER_SUBTLE := Color("#00C9E8", 0.38)
+const BORDER_STRONG := Color("#00E5FF", 0.85)
 
-# Typography and semantic state
-const TEXT_PRIMARY := Color("#E7EDF7")
-const TEXT_MUTED := Color("#93A1B5")
-const ACCENT := Color("#78A9FF")
-const SUCCESS := Color("#67D49B")
-const WARNING := Color("#F2C66D")
-const DANGER := Color("#F17B7B")
-const INFO := Color("#85B8FF")
+# HUD and state roles
+const TEXT_PRIMARY := Color("#F7FBFF")
+const TEXT_MUTED := Color("#7F91AD")
+const ACCENT := Color("#00E5FF")      # Score / normal paddle / cyan bricks
+const SUCCESS := Color("#00F07A")     # GO / wide paddle / green bricks
+const WARNING := Color("#FFD400")     # Level / transitions / yellow bricks
+const DANGER := Color("#FF167F")      # Lives / hazards / pink bricks
+const INFO := Color("#189CFF")        # Blue bricks and utility indicators
 
 # Gameplay material roles
-const BRICK_STANDARD := Color("#334155")
-const BRICK_DURABLE := Color("#52627A")
-const BRICK_BOSS := Color("#865E9C")
-const BALL := Color("#F4F7FB")
+const BRICK_STANDARD := ACCENT
+const BRICK_DURABLE := Color("#FF7A00")
+const BRICK_BOSS := Color("#FF167F")
+const BALL := Color("#FFFFFF")
 const PADDLE := ACCENT
 const PADDLE_STICKY := WARNING
 const PADDLE_WIDE := SUCCESS
 
-# Spacing and panel layout
-const PANEL_RADIUS := 8
-const PANEL_MARGIN := Vector2i(12, 8)
+# Typography and layout
+const HUD_FONT_SIZE := 22
+const CALLOUT_FONT_SIZE := 76
+const PANEL_RADIUS := 0
+const PANEL_MARGIN := Vector2i(18, 12)
 
 # Temporary compatibility aliases: remove only after all consumers migrate.
 const NEON_BG := BACKGROUND

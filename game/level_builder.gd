@@ -9,12 +9,15 @@ const START_Y := 40.0
 func build_level(container: Node, brick_scene: PackedScene, viewport_size: Vector2, config: Dictionary, on_destroyed: Callable) -> int:
 	var cols: int = config["cols"]
 	var rows: int = config["rows"]
-	var total_w := float(cols * (BRICK_W + BRICK_PAD) - BRICK_PAD)
-	var start_x := (viewport_size.x - total_w) / 2.0
+	var layout: Array = config.get("layout", [])
+	var total_width := float(cols * (BRICK_W + BRICK_PAD) - BRICK_PAD)
+	var start_x := (viewport_size.x - total_width) * 0.5
 	var count := 0
 
 	for row in range(rows):
 		for col in range(cols):
+			if not _cell_is_filled(layout, row, col):
+				continue
 			var brick := brick_scene.instantiate() as Brick
 			brick.position = Vector2(start_x + col * (BRICK_W + BRICK_PAD), START_Y + row * (BRICK_H + BRICK_PAD))
 			_configure_brick(brick, row, col, rows, config)
@@ -24,17 +27,15 @@ func build_level(container: Node, brick_scene: PackedScene, viewport_size: Vecto
 
 	return count
 
-const ROW_COLORS := [
-	Color(1.0, 0.1, 0.1),   # row 0 — red
-	Color(1.0, 0.5, 0.1),   # row 1 — orange
-	Color(1.0, 1.0, 0.2),   # row 2 — yellow
-	Color(GameTheme.SUCCESS),   # row 3 — lime
-	Color(GameTheme.ACCENT),    # row 4 — cyan
-	Color(0.3, 0.5, 1.0),       # row 5 — blue
-	Color(GameTheme.BRICK_BOSS),# row 6 — purple
-	Color(GameTheme.INFO),      # row 7 — magenta
-	Color(0.9, 0.9, 0.9),   # row 8 — white
-	Color(0.6, 1.0, 0.8),   # row 9 — mint
+const ROW_COLORS: Array[Color] = [
+	Color("#12E8FF"), # Cyan
+	Color("#11B7FF"), # Blue
+	Color("#00F07A"), # Green
+	Color("#39FF63"), # Bright green
+	Color("#FF7A00"), # Orange
+	Color("#FF2D1A"), # Red-orange
+	Color("#FF167F"), # Pink
+	Color("#B529FF"), # Purple
 ]
 
 func _configure_brick(brick: Brick, row: int, col: int, total_rows: int, config: Dictionary) -> void:
@@ -61,3 +62,11 @@ func _configure_brick(brick: Brick, row: int, col: int, total_rows: int, config:
 	brick.drop_chance = drop
 
 	brick.row_color = ROW_COLORS[row % ROW_COLORS.size()]
+
+func _cell_is_filled(layout: Array, row: int, col: int) -> bool:
+	if layout.is_empty():
+		return true
+	if row >= layout.size():
+		return false
+	var mask := String(layout[row])
+	return col < mask.length() and mask[col] == "#"

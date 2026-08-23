@@ -1,6 +1,6 @@
 # Architecture
 
-Breakout is a Godot 4.x (GDScript) arcade game — a modern take on Atari's classic with neon visuals, power-ups, 5 authored levels, and endless mode.
+Breakout is a Godot 4.x (GDScript) arcade game — a modern take on Atari's classic with a neon arcade aesthetic, power-ups, 5 authored levels (2 with authored layouts), and endless mode.
 
 ---
 
@@ -35,8 +35,8 @@ main.tscn (Main : Node2D)
 |------|------|
 | `main.gd` | **Run conductor** — owns phase transitions, session flow, level loading, score/lives, combo, shake |
 | `game/game_state.gd` | Phase enum: `TITLE → LEVEL_INTRO → READY → PLAYING → ROUND_CLEAR` + `PAUSED`, `GAME_OVER`, `VICTORY` |
-| `game/level_defs.gd` | Static level configs: name, grid size, speed multiplier, brick HP, drop weights |
-| `game/level_builder.gd` | Brick geometry generation from level config |
+| `game/level_defs.gd` | Static level configs: name, grid size, speed multiplier, brick HP, drop weights, optional `layout` string masks |
+| `game/level_builder.gd` | Brick geometry generation — mask-aware `_cell_is_filled()` skips empty cells when `layout` is set |
 | `game/powerup_registry.gd` | Central power-up metadata: icon, color, duration, weight |
 
 ### Entities
@@ -65,7 +65,7 @@ main.tscn (Main : Node2D)
 | Autoload | File | Purpose |
 |----------|------|---------|
 | `AudioManager` | `autoload/audio_manager.gd` | Synthesized sound effects (8 PCM tones, play-and-forget), mute toggle |
-| `GameTheme` | `autoload/game_theme.gd` | Semantic color palette (ACCENT, SUCCESS, INFO, WARNING, DANGER, BRICK_BOSS, BACKGROUND, BORDER_SUBTLE, TEXT_PRIMARY, TEXT_MUTED) |
+| `GameTheme` | `autoload/game_theme.gd` | Neon arcade palette: near-black BACKGROUND, cyan ACCENT, green SUCCESS, yellow WARNING, magenta DANGER, blue INFO; HUD_FONT_SIZE=22, CALLOUT_FONT_SIZE=76 |
 | `RunState` | `autoload/run_state.gd` | Transient session: `start_level`, `last_score` |
 | `SaveData` | `autoload/save_data.gd` | High score persistence to `user://breakout_save.json` |
 | `ScreenTransition` | `autoload/screen_transition.gd` | Scene fade in/out with deadlock guard (5s timeout), public API: `is_busy()`, `force_reset()` |

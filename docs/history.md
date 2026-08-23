@@ -2,6 +2,18 @@
 
 ---
 
+## Session 29 (2026-08-15) — Retheme: Calm Dashboard → Neon Arcade
+
+- **7 changes across 8 files** — visual/layout vertical slice reverting from calm dashboard back to neon arcade per `docs/Feedback 0815 1700.md`
+- **Theme**: `game_theme.gd` replaced soft palette with near-black background, neon cyan/green/yellow/magenta palette; HUD/callout font sizes added; `BRICK_STANDARD` → cyan
+- **Level layouts**: `level_defs.gd` — levels 1 & 2 gain `layout` string masks (10×4 full grid, split formation); `level_builder.gd` — mask-aware `_cell_is_filled()` + neon `ROW_COLORS` (8-color gradient: cyan→blue→green→orange→pink→purple)
+- **HUD**: `hud.tscn` — full layout refresh (score cyan, level yellow, lives magenta, divider, large callout fonts); `hud.gd` — rounded card removed (`StyleBoxEmpty`), intro always shows green "GO!", level complete shows "LEVEL COMPLETED!" in yellow
+- **Glow**: `paddle.tscn` — added cyan halo ColorRect behind sprite; `ball.tscn` — added white halo ColorRect
+- **Font + background**: `project.godot` — Mono-Bold wired globally; `main.tscn` — background overlay uses `GameTheme.BACKGROUND`; `main.gd` — combo label uses `GameTheme.WARNING`
+- **Files**: `autoload/game_theme.gd`, `game/level_defs.gd`, `game/level_builder.gd`, `ui/hud.tscn`, `ui/hud.gd`, `entities/paddle.tscn`, `entities/ball.tscn`, `project.godot`, `main.tscn`, `main.gd`
+
+---
+
 ## Session 28 (2026-08-14) — Complete Retheme: Neon Arcade → Calm Dashboard
 
 - **40+ changes across 35+ files** — full visual and audio retheme from neon arcade to calm dashboard

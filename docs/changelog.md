@@ -4,6 +4,22 @@ All notable changes to Breakout are documented here. Derived from session retro 
 
 ---
 
+## 2026-08-15 — Session 29: Retheme — Calm Dashboard → Neon Arcade
+
+### Changed
+- **Neon palette** — `game_theme.gd`: replaced soft workspace palette with near-black background (`#03050B`), neon cyan (`#00E5FF`), green (`#00F07A`), yellow (`#FFD400`), magenta (`#FF167F`), orange (`#FF7A00`); `BRICK_STANDARD` → cyan; `BALL` → white
+- **Authored layouts** — `level_defs.gd`: levels 1 & 2 gain `layout` string masks (full grid + split formation); `level_builder.gd`: mask-aware `_cell_is_filled()` skips empty cells
+- **Brick bands** — `level_builder.gd`: `ROW_COLORS` → 8-color neon gradient (cyan → blue → green → orange → pink → purple)
+- **HUD** — `hud.tscn`: score cyan, level yellow, lives magenta, cyan divider line, large callout fonts (76px level complete, 52px GO!); `hud.gd`: rounded card removed, intro shows "GO!" in green, clear shows "LEVEL COMPLETED!" in yellow
+- **Glow halos** — `paddle.tscn`: cyan halo behind sprite; `ball.tscn`: white halo behind ball
+- **Font** — `project.godot`: Mono-Bold wired as global default font (size 22)
+- **Background** — `main.tscn`: `BackgroundOverlay` uses `GameTheme.BACKGROUND`; `main.gd`: combo label uses `GameTheme.WARNING`
+
+### Validation
+- Godot v4.7.1 headless parse — **PASS** (zero parse errors)
+
+---
+
 ## 2026-08-14 — Session 28: Complete Retheme — Neon Arcade → Calm Dashboard
 
 ### Changed

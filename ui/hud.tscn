@@ -7,60 +7,64 @@ script = ExtResource("1_a2fe5")
 layer = 1
 
 [node name="ScoreLabel" type="Label" parent="."]
-offset_left = 16.0
-offset_top = 8.0
+offset_left = 72.0
+offset_top = 10.0
 offset_right = 200.0
 offset_bottom = 40.0
-theme_override_colors/font_color = Color(0.4706, 0.6627, 1.0, 1.0)
-theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color("#00E5FF")
+theme_override_font_sizes/font_size = 22
 text = "SCORE: 0"
 
 [node name="LevelLabel" type="Label" parent="."]
-offset_left = 440.0
-offset_top = 8.0
-offset_right = 640.0
+anchors_preset = 10
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -100.0
+offset_top = 10.0
+offset_right = 100.0
 offset_bottom = 40.0
-theme_override_colors/font_color = Color(0.5255, 0.7216, 1.0, 1.0)
-theme_override_font_sizes/font_size = 24
 horizontal_alignment = 1
+theme_override_colors/font_color = Color("#FFD400")
+theme_override_font_sizes/font_size = 22
 text = "LEVEL 1"
 
 [node name="LivesContainer" type="HBoxContainer" parent="."]
 anchor_left = 1.0
 anchor_right = 1.0
 offset_left = -180.0
-offset_top = 8.0
-offset_right = 0.0
+offset_top = 10.0
+offset_right = -72.0
 offset_bottom = 40.0
+alignment = 2
 
 [node name="Heart1" type="Label" parent="LivesContainer"]
-theme_override_colors/font_color = Color(1.0, 0.1, 0.1, 1.0)
-theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color("#FF167F")
+theme_override_font_sizes/font_size = 22
 text = "♥"
 
 [node name="Heart2" type="Label" parent="LivesContainer"]
-theme_override_colors/font_color = Color(1.0, 0.1, 0.1, 1.0)
-theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color("#FF167F")
+theme_override_font_sizes/font_size = 22
 text = "♥"
 
 [node name="Heart3" type="Label" parent="LivesContainer"]
-theme_override_colors/font_color = Color(1.0, 0.1, 0.1, 1.0)
-theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color("#FF167F")
+theme_override_font_sizes/font_size = 22
 text = "♥"
 
 [node name="Heart4" type="Label" parent="LivesContainer"]
-theme_override_colors/font_color = Color(1.0, 0.1, 0.1, 1.0)
-theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color("#FF167F")
+theme_override_font_sizes/font_size = 22
 text = "♥"
 
 [node name="Heart5" type="Label" parent="LivesContainer"]
-theme_override_colors/font_color = Color(1.0, 0.1, 0.1, 1.0)
-theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color("#FF167F")
+theme_override_font_sizes/font_size = 22
 text = "♥"
 
 [node name="LivesOverflow" type="Label" parent="LivesContainer"]
-theme_override_colors/font_color = Color(1.0, 0.1, 0.1, 1.0)
-theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color("#FF167F")
+theme_override_font_sizes/font_size = 22
 text = ""
 visible = false
 
@@ -71,10 +75,17 @@ offset_left = -220.0
 offset_top = 8.0
 offset_right = -20.0
 offset_bottom = 40.0
-theme_override_colors/font_color = Color(0.5255, 0.7216, 1.0, 1.0)
+theme_override_colors/font_color = Color("#7F91AD")
 theme_override_font_sizes/font_size = 16
 horizontal_alignment = 2
 text = ""
+
+[node name="TopDivider" type="ColorRect" parent="."]
+offset_left = 0.0
+offset_top = 51.0
+offset_right = 1280.0
+offset_bottom = 53.0
+color = Color(0.0, 0.9, 1.0, 0.55)
 
 [node name="LaunchPrompt" type="Label" parent="."]
 anchors_preset = 8
@@ -105,7 +116,7 @@ offset_right = 200.0
 offset_bottom = 60.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_color = Color(0.4078, 0.8314, 0.6078, 0.8)
+theme_override_colors/font_color = Color("#00F07A")
 theme_override_font_sizes/font_size = 32
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -123,8 +134,8 @@ offset_right = 200.0
 offset_bottom = 40.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_color = Color(0.4706, 0.6627, 1.0, 1.0)
-theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color("#FFD400")
+theme_override_font_sizes/font_size = 76
 horizontal_alignment = 1
 vertical_alignment = 1
 text = ""
@@ -142,7 +153,7 @@ offset_right = 200.0
 offset_bottom = 60.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_colors/font_color = Color(1.0, 0.1, 0.1, 1.0)
+theme_override_colors/font_color = Color("#FF167F")
 theme_override_font_sizes/font_size = 32
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -162,6 +173,7 @@ grow_horizontal = 2
 grow_vertical = 2
 custom_minimum_size = Vector2(440, 100)
 visible = false
+modulate = Color(1, 1, 1, 0)
 
 [node name="VBoxContainer" type="VBoxContainer" parent="LevelIntroPanel"]
 anchors_preset = 15
@@ -173,15 +185,15 @@ offset_right = -16.0
 offset_bottom = -12.0
 
 [node name="LevelIntroTitle" type="Label" parent="LevelIntroPanel/VBoxContainer"]
-theme_override_colors/font_color = Color(0.4706, 0.6627, 1.0, 1.0)
-theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color("#00F07A")
+theme_override_font_sizes/font_size = 52
 horizontal_alignment = 1
 autowrap_mode = 2
-text = "LEVEL 1"
+text = "GO!"
 
 [node name="LevelIntroSubtitle" type="Label" parent="LevelIntroPanel/VBoxContainer"]
 theme_override_colors/font_color = Color(1.0, 1.0, 0.4, 0.9)
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 18
 horizontal_alignment = 1
 autowrap_mode = 2
 text = ""

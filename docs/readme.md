@@ -1,6 +1,6 @@
 # Breakout — Modern Retro Breakout Game
 
-A modern breakout game inspired by Atari's classic, built with **Godot 4.x** featuring a calm dashboard aesthetic, 6 power-up types, 5 progressive levels + endless mode, and boss bricks.
+A modern breakout game inspired by Atari's classic, built with **Godot 4.x** featuring a neon arcade aesthetic, 6 power-up types, 5 progressive levels + endless mode, and boss bricks.
 
 ---
 
@@ -18,7 +18,7 @@ A modern breakout game inspired by Atari's classic, built with **Godot 4.x** fea
 - **6 power-up types**: Multiball, Big Paddle, Sticky, Laser, Slow Balls, Extra Life
 - **5 hand-crafted levels** with progressive difficulty → Endless mode
 - **3 brick types**: Standard (1 HP), Metal (3 HP, scanline shader), Boss (5 HP, pulsing glow)
-- **Calm palette**: soft blue/green/purple/amber on dark, glow shaders, particle FX
+- **Neon palette**: near-black playfield with cyan/green/yellow/magenta/orange brick bands, ball/paddle glow halos, particle FX
 - **Controls**: Keyboard (A/D, Arrows, Space) or mouse (paddle follows cursor)
 - **Audio**: Synthesized tones (brick hit, paddle hit, launch, power-up, etc.)
 - **Persistent high scores**
@@ -99,7 +99,7 @@ res://
 
 - **Design**: Derived from Atari's Breakout (1976)
 - **Engine**: Godot 4.x
-- **Palette**: Calm dashboard (soft blue/green/purple/amber on dark)
+- **Palette**: Neon arcade (near-black, cyan/green/yellow/magenta on dark)
 
 ---
 
