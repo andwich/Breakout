@@ -31,12 +31,3 @@ const HUD_FONT_SIZE := 22
 const CALLOUT_FONT_SIZE := 76
 const PANEL_RADIUS := 0
 const PANEL_MARGIN := Vector2i(18, 12)
-
-# Temporary compatibility aliases: remove only after all consumers migrate.
-const NEON_BG := BACKGROUND
-const NEON_CYAN := ACCENT
-const NEON_MAGENTA := INFO
-const NEON_LIME := SUCCESS
-const NEON_YELLOW := WARNING
-const NEON_RED := DANGER
-const NEON_PURPLE := BRICK_BOSS

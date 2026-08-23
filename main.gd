@@ -45,7 +45,6 @@ var _shake_requests_this_frame: int = 0
 
 const MAX_SCORE_POPUPS_PER_FRAME := 2
 const MAX_SHAKE_REQUESTS_PER_FRAME := 2
-var _glow_tween: Tween
 var _flash_overlay: ColorRect
 var _slow_overlay: ColorRect
 var _flash_tween: Tween
