@@ -23,6 +23,7 @@ var _big_paddle_timer: Timer
 var _sticky_timer: Timer
 var _sticky_release_callback: Callable
 var _deferred_launch: bool = false
+var _keyboard_active := false
 
 @onready var sprite: ColorRect = $Sprite
 
@@ -70,7 +71,11 @@ func _physics_process(delta: float) -> void:
 	if get_tree().paused:
 		return
 	var direction := Input.get_axis("move_left", "move_right")
-	if direction == 0.0:
+	if direction != 0.0:
+		_keyboard_active = true
+	elif Input.get_last_mouse_velocity().length_squared() > 4.0:
+		_keyboard_active = false
+	if not _keyboard_active:
 		var target_x := get_global_mouse_position().x
 		if target_x >= 0.0 and target_x <= get_viewport_rect().size.x:
 			direction = clampf((target_x - position.x) / (target_width * 0.5), -1.0, 1.0)
