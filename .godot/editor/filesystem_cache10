@@ -1,5 +1,5 @@
 78098b89c88a74ebe8c20117b8754620
-::res://::1786928874
+::res://::1787488072
 AGENTS.md::TextFile::-1::1787484458::0::1::::<><><>0<>0<><>::
 main.gd::GDScript::2998372749516647317::1787484374::0::1::::<>Node2D<><>0<>0<><>::
 main.tscn::PackedScene::-1::1786850711::0::1::::<><><>0<>0<><>::res://main.gd<>res://entities/paddle.tscn<>res://entities/laser_manager.gd<>res://ui/hud.tscn<>res://shaders/scanline.gdshader<>res://entities/playfield_border.gd
@@ -114,6 +114,8 @@ tween_helper.gd::GDScript::5860783860242857252::1787484331::0::1::::TweenHelper<
 ::res://shaders/::1786304623
 brick_glow.gdshader::Shader::3128636571185832827::1778044473::0::1::::<><><>0<>0<><>::
 scanline.gdshader::Shader::7776086058787016724::1778033023::0::1::::<><><>0<>0<><>::
+::res://tests/::1787489557
+smoke_0823.gd::GDScript::6853163755448677057::1787489548::0::1::::<>SceneTree<><>0<>0<><>::
 ::res://ui/::1786767211
 hud.gd::GDScript::7960555521784194321::1787484389::0::1::::HUD<>CanvasLayer<><>0<>0<><>::
 hud.tscn::PackedScene::-1::1786850711::0::1::::<><><>0<>0<><>::res://ui/hud.gd
