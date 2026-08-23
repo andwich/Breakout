@@ -153,7 +153,7 @@ func refresh_damage_visuals() -> void:
 	if _health_bar:
 		_health_bar.size.x = 56.0 * health_ratio
 	if _sprite and brick_type == "standard":
-		_sprite.color = GameTheme.BRICK_STANDARD.darkened((1.0 - health_ratio) * 0.16)
+		_sprite.color = row_color.lerp(GameTheme.TEXT_MUTED, 0.5).darkened((1.0 - health_ratio) * 0.16)
 
 func _update_visual():
 	if _hp_label:
@@ -183,13 +183,14 @@ func _update_visual():
 			var alpha := 1.0 - float(max_hp - _hp) / float(max_hp) * 0.45
 			modulate.a = clampf(alpha, 0.55, 1.0)
 		_:
+			var calm_band := row_color.lerp(GameTheme.TEXT_MUTED, 0.5)
 			if _sprite:
 				_sprite.material = null
-				_sprite.color = GameTheme.BRICK_STANDARD.darkened(0.12).lerp(Color.WHITE, 0.05)
+				_sprite.color = calm_band.darkened(0.12).lerp(Color.WHITE, 0.05)
 			if _particles:
 				var pm := _particles.process_material as ParticleProcessMaterial
 				if pm:
-					pm.color = GameTheme.BRICK_STANDARD
+					pm.color = calm_band
 			modulate.a = 0.92
 
 func _exit_tree() -> void:
