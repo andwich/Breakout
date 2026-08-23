@@ -96,7 +96,9 @@ func _physics_process(delta: float) -> void:
 		_stuck_frames += 1
 		if _stuck_frames > 30:
 			var escape_dir := _last_velocity.normalized() if _last_velocity.length_squared() > 0.01 else Vector2(randf_range(-0.5, 0.5), -1.0).normalized()
-			velocity = escape_dir.rotated(deg_to_rad(randf_range(-40, 40))) * speed
+			escape_dir = escape_dir.rotated(deg_to_rad(randf_range(-30, 30)))
+			escape_dir.y = minf(escape_dir.y, -0.35)
+			velocity = escape_dir.normalized() * speed
 			_stuck_frames = 0
 	else:
 		_stuck_frames = 0
@@ -118,6 +120,8 @@ func _physics_process(delta: float) -> void:
 		remaining -= step_dist
 		steps += 1
 
+	# Residual move: accepted tunneling risk on severe frame hitches (travel
+	# beyond MAX_PHYSICS_STEPS * MAX_STEP_DISTANCE). Never discard travel.
 	if remaining > 0.01 and collision == null:
 		move_and_collide(direction * remaining)
 
