@@ -7,6 +7,7 @@ signal paddle_hit
 
 const MAX_STEP_DISTANCE := 6.0
 const MAX_PHYSICS_STEPS := 96
+const MIN_UPWARD_COMPONENT := 0.42
 
 @export var base_speed: float = 350.0
 @export var ball_color: Color = GameTheme.BALL:
@@ -152,10 +153,9 @@ func _physics_process(delta: float) -> void:
 			# paddle already has a caught ball — treat as normal bounce
 		var hit_ratio: float = (global_position.x - p.global_position.x) / (p.target_width / 2.0)
 		hit_ratio = clampf(hit_ratio, -1.0, 1.0)
-		var aim := Vector2(hit_ratio * 0.82, -1.0).normalized()
-		aim.y = minf(aim.y, -0.38)
-		aim = aim.normalized()
-		velocity = aim * speed
+		var aim := Vector2(hit_ratio, -1.0).normalized()
+		aim.y = minf(aim.y, -MIN_UPWARD_COMPONENT)
+		velocity = aim.normalized() * speed
 		_clamp_min_speed()
 		return
 	else:
