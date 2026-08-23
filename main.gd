@@ -481,19 +481,25 @@ func _on_powerup_collected(ptype: PowerUp.Type, duration: float) -> void:
 					active.append(b)
 
 			var slots := MAX_BALLS - active.size()
-			for original in active:
-				for _i in range(2):
-					if slots <= 0:
-						break
-					var clone := _spawn_ball(original.position)
-					clone.ball_color = Color(GameTheme.WARNING.r, GameTheme.WARNING.g, GameTheme.WARNING.b, 1.0)
-					clone.launched = true
-					var rotated := original.velocity.rotated(deg_to_rad(
-						randf_range(25, 45) * (1 if randi() % 2 == 0 else -1)))
-					# clone.speed is already the slowed value when slow is active (_spawn_ball applies it).
-					# Using clone.speed here (not original.speed) is intentional.
-					clone.velocity = rotated.normalized() * clone.speed
-					slots -= 1
+			if slots <= 0:
+				# Over-cap pickup: convert to a bonus instead of a dud drop.
+				score += 50
+				hud.update_score(score)
+				try_spawn_score_popup(paddle.global_position + Vector2(0, -40), 50)
+			else:
+				for original in active:
+					for _i in range(2):
+						if slots <= 0:
+							break
+						var clone := _spawn_ball(original.position)
+						clone.ball_color = Color(GameTheme.WARNING.r, GameTheme.WARNING.g, GameTheme.WARNING.b, 1.0)
+						clone.launched = true
+						var rotated := original.velocity.rotated(deg_to_rad(
+							randf_range(25, 45) * (1 if randi() % 2 == 0 else -1)))
+						# clone.speed is already the slowed value when slow is active (_spawn_ball applies it).
+						# Using clone.speed here (not original.speed) is intentional.
+						clone.velocity = rotated.normalized() * clone.speed
+						slots -= 1
 
 		PowerUp.Type.BIG_PADDLE:
 			paddle.apply_big_paddle(duration)
