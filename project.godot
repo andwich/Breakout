@@ -71,7 +71,6 @@ common/2d/solver/solver_type=0
 textures/canvas_textures/default_texture_filter=0
 2d/sdf/oversizing=1.0
 
-[font]
+[gui]
 
-default_font="res://assets/fonts/Mono-Bold.tres"
-default_font_size=22
+theme/custom_font="res://assets/fonts/Mono-Bold.ttf"
