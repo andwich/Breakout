@@ -47,8 +47,7 @@ func update_score(new_score: int) -> void:
 	score_label.text = "SCORE: %d" % new_score
 	score_label.reset_size()
 	score_label.pivot_offset = score_label.size / 2.0
-	if _score_tween and _score_tween.is_valid():
-		_score_tween.kill()
+	TweenHelper.kill_if_valid(_score_tween)
 	_score_tween = create_tween()
 	_score_tween.tween_property(score_label, "scale", Vector2(1.15, 1.15), 0.05)
 	_score_tween.tween_property(score_label, "scale", Vector2(1.0, 1.0), 0.15)

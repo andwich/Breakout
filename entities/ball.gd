@@ -174,8 +174,7 @@ func _clamp_min_speed() -> void:
 	velocity = velocity.normalized() * speed
 
 func _pop_visual() -> void:
-	if pop_tween and pop_tween.is_valid():
-		pop_tween.kill()
+	TweenHelper.kill_if_valid(pop_tween)
 	scale = Vector2.ONE
 	pop_tween = create_tween()
 	pop_tween.set_trans(Tween.TRANS_QUAD)
@@ -200,5 +199,4 @@ func _on_screen_exited() -> void:
 	queue_free()
 
 func _exit_tree() -> void:
-	if pop_tween and pop_tween.is_valid():
-		pop_tween.kill()
+	TweenHelper.kill_if_valid(pop_tween)

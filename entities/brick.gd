@@ -91,19 +91,16 @@ func take_damage(amount: int = 1) -> Dictionary:
 		if brick_type == "boss":
 			var hp_ratio := float(_hp) / float(max_hp)
 			var target_color := GameTheme.BRICK_BOSS.darkened(1.0 - clampf(hp_ratio, 0.3, 1.0))
-			if _flash_tween and _flash_tween.is_valid():
-				_flash_tween.kill()
+			TweenHelper.kill_if_valid(_flash_tween)
 			_flash_tween = create_tween()
 			_flash_tween.tween_property(_sprite, "color", flash_color, 0.04)
 			_flash_tween.tween_property(_sprite, "color", target_color, 0.07)
 		else:
-			if _flash_tween and _flash_tween.is_valid():
-				_flash_tween.kill()
+			TweenHelper.kill_if_valid(_flash_tween)
 			_flash_tween = create_tween()
 			_flash_tween.tween_property(_sprite, "color", flash_color, 0.04)
 			_flash_tween.tween_callback(func(): _update_visual())
-		if _scale_tween and _scale_tween.is_valid():
-			_scale_tween.kill()
+		TweenHelper.kill_if_valid(_scale_tween)
 		_scale_tween = create_tween()
 		_scale_tween.tween_property(self, "scale", Vector2(1.04, 1.04), 0.03)
 		_scale_tween.tween_property(self, "scale", Vector2(1.0, 1.0), 0.07)

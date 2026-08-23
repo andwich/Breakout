@@ -136,16 +136,12 @@ func _start_new_run(start_level: int = 1) -> void:
 	_restore_ball_speeds()
 	_combo_count = 0
 	_combo_timer.stop()
-	if _combo_tween and _combo_tween.is_valid():
-		_combo_tween.kill()
+	TweenHelper.kill_if_valid(_combo_tween)
 	if _combo_label:
 		_combo_label.visible = false
-	if _shake_tween and _shake_tween.is_valid():
-		_shake_tween.kill()
-	if _flash_tween and _flash_tween.is_valid():
-		_flash_tween.kill()
-	if _slow_tween and _slow_tween.is_valid():
-		_slow_tween.kill()
+	TweenHelper.kill_if_valid(_shake_tween)
+	TweenHelper.kill_if_valid(_flash_tween)
+	TweenHelper.kill_if_valid(_slow_tween)
 	if _flash_overlay:
 		_flash_overlay.color.a = 0.0
 	if _slow_overlay:
@@ -184,8 +180,7 @@ func _load_level(level: int) -> void:
 		child.queue_free()
 	for child in powerups_container.get_children():
 		child.queue_free()
-	if _shake_tween and _shake_tween.is_valid():
-		_shake_tween.kill()
+	TweenHelper.kill_if_valid(_shake_tween)
 	_shake_intensity = 0.0
 	position = _base_position
 	paddle.reset()
@@ -547,8 +542,7 @@ func _spawn_background_particles() -> void:
 func _reset_combo() -> void:
 	_combo_count = 0
 	if _combo_label and _combo_label.visible:
-		if _combo_tween and _combo_tween.is_valid():
-			_combo_tween.kill()
+		TweenHelper.kill_if_valid(_combo_tween)
 		_combo_tween = create_tween()
 		_combo_tween.tween_property(_combo_label, "modulate:a", 0.0, 0.3)
 		_combo_tween.tween_callback(func(): _combo_label.visible = false)
@@ -556,8 +550,7 @@ func _reset_combo() -> void:
 func _show_combo(count: int, bonus: int) -> void:
 	if not _combo_label:
 		return
-	if _combo_tween and _combo_tween.is_valid():
-		_combo_tween.kill()
+	TweenHelper.kill_if_valid(_combo_tween)
 	_combo_label.text = "COMBO x%d  +%d" % [count, bonus]
 	_combo_label.modulate = Color(GameTheme.WARNING) if count < 6 else Color(GameTheme.DANGER)
 	_combo_label.add_theme_font_size_override("font_size", mini(28 + count * 2, 48))
