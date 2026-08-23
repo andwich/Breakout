@@ -84,6 +84,7 @@ func take_damage(amount: int = 1) -> Dictionary:
 	_update_visual()
 
 	if _hp > 0:
+		var flash_color := base_color.lightened(0.75)
 		refresh_damage_visuals()
 		if _particles:
 			_particles.emitting = true
@@ -93,13 +94,13 @@ func take_damage(amount: int = 1) -> Dictionary:
 			if _flash_tween and _flash_tween.is_valid():
 				_flash_tween.kill()
 			_flash_tween = create_tween()
-			_flash_tween.tween_property(_sprite, "color", Color.WHITE, 0.04)
+			_flash_tween.tween_property(_sprite, "color", flash_color, 0.04)
 			_flash_tween.tween_property(_sprite, "color", target_color, 0.07)
 		else:
 			if _flash_tween and _flash_tween.is_valid():
 				_flash_tween.kill()
 			_flash_tween = create_tween()
-			_flash_tween.tween_property(_sprite, "color", Color(1.0, 1.0, 1.0), 0.04)
+			_flash_tween.tween_property(_sprite, "color", flash_color, 0.04)
 			_flash_tween.tween_callback(func(): _update_visual())
 		if _scale_tween and _scale_tween.is_valid():
 			_scale_tween.kill()
