@@ -2,6 +2,20 @@
 
 ---
 
+## Session 30 (2026-08-23) — Feedback 0815 2340 fixes
+
+- **10 commits across 8 files + 1 new** — full rollout of actionable items from `docs/Feedback 0815 2340.md`, each gated by headless parse
+- **Font (C1)**: `project.godot` — invalid `[font]` section → `gui/theme/custom_font` pointing at `Mono-Bold.ttf`; unused `Mono-Bold.tres` deleted. All labels previously rendered in engine default
+- **Playability (C2–C5)**: `ball.gd` — rebound max deflection 0.82→1.0 with real `MIN_UPWARD_COMPONENT = 0.42` const; stuck-ball escape rotated before upward clamp (y ≤ −0.35). `paddle.gd` — keyboard owns movement until mouse moves. `main.gd` — over-cap multiball converts to +50
+- **Aesthetics (C6–C7)**: `brick.gd` — damage flash uses `base_color.lightened(0.75)` not white; standard bricks render muted ROW_COLORS bands (lerp 50% toward TEXT_MUTED), particles match
+- **Code health (C8–C9)**: dropped unused `_glow_tween` and NEON_* aliases; added `game/tween_helper.gd::kill_if_valid()` adopted at 13 sites
+- **Docs (C10)**: AGENTS.md rules 16/20 corrected (0.38 const never existed; flashes no longer white), checklist updated; readme implementation notes synced; retro_0823.md created
+- **Deferred**: combo window bar, background vignette tuning
+- **Files**: `project.godot`, `entities/ball.gd`, `entities/paddle.gd`, `entities/brick.gd`, `main.gd`, `autoload/game_theme.gd`, `ui/hud.gd`, `game/tween_helper.gd`, docs
+- **Docs**: `docs/retro_0823.md` created, `docs/readme.md`, `AGENTS.md`, `docs/history.md` updated
+
+---
+
 ## Session 29 (2026-08-15) — Retheme: Calm Dashboard → Neon Arcade
 
 - **7 changes across 8 files** — visual/layout vertical slice reverting from calm dashboard back to neon arcade per `docs/Feedback 0815 1700.md`

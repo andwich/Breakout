@@ -129,11 +129,11 @@ res://
 13. **Ball containment** — treat any screen exit as a loss; keep the idempotent `_on_screen_exited()` guard and the bounds fallback in `_physics_process()`
 14. **Launch input suppression** — `suppress_launch_until_release` is only set on title-screen transition; normal READY states accept the next press immediately
 15. **Ball adaptive substeps** — up to `MAX_PHYSICS_STEPS` (96) per tick; residual move for severe frame hitches; never discard travel
-16. **Rebound minimum upward** — paddle rebound enforces `MIN_UPWARD_COMPONENT = 0.38` to prevent shallow wall-rally loops
+16. **Rebound minimum upward** — paddle rebound enforces `Ball.MIN_UPWARD_COMPONENT = 0.42` to prevent shallow wall-rally loops; max horizontal deflection is full `hit_ratio` (~45° at the edges)
 17. **Durable brick scoring** — non-lethal hits return `score_points = 0`; only destruction awards points; combo/score skipped for `points <= 0`
 18. **Sticky context prompt** — emit `sticky_ball_caught` / `sticky_ball_released` signals; `main.gd` owns HUD text via `show_context_prompt()` / `hide_context_prompt()`
 19. **Power-up round-clear grace** — `_on_powerup_collected()` accepts `ROUND_CLEAR` phase so in-flight power-ups resolve their effects
-20. **Visual hierarchy** — standard bricks darkened 12% at idle; hit flashes remain bright white; slow overlay alpha = 0.10
+20. **Visual hierarchy** — standard bricks idle on muted `ROW_COLORS` bands (row_color blended 50% toward TEXT_MUTED, then darkened 12%); hit flashes lighten the brick's own hue (`base_color.lightened(0.75)`), never pure white; slow overlay alpha = 0.10
 21. **Typed arrays** — all indexed collections must use `Array[float]` (or appropriate type); never rely on `:=` inference from untyped `Array` index
 22. **Master bus guard** — use `AudioManager._master_bus_index()` with `if idx >= 0` before audio bus operations; never call `AudioServer.get_bus_index()` inline without checking
 23. **AudioStreamPlayer pool** — reuse the 12-player pool via `_play_stream()`; never create `AudioStreamPlayer.new()` per effect
@@ -202,7 +202,9 @@ When making changes, verify:
 - [ ] Screen shake stacks correctly
 - [ ] Multiball + Sticky: first ball sticks, second bounces
 - [ ] Sticky timer expires while paused: auto-launch on unpause
-- [ ] Ball wedged in corner: escapes in previous travel direction
+- [ ] Ball wedged in corner: escapes upward, preserving previous horizontal direction
+- [ ] Keyboard released with cursor off-center: paddle stops; resumes tracking on mouse move
+- [ ] Multiball collected at cap: +50 bonus popup, no clone spawned
 - [ ] Laser + ball hit same brick same frame: single score event
 - [ ] Launch from title: READY does not launch until the click/Space is released and pressed again
 - [ ] Big Paddle + Sticky: yellow while sticky; lime on sticky expiry while Big Paddle still active
@@ -214,6 +216,8 @@ When making changes, verify:
 - [ ] Durable brick damage visibly changes persistent state on non-lethal hits; flash tween returns to post-damage base color
 - [ ] Sticky prompt reads "AIM • RELEASE TO FIRE" and clears on every release/expiry path
 - [ ] Brick-hit audio does not overlap into harsh click bursts during rapid destruction
+- [ ] Edge paddle hits exit visibly steeper than center hits (~45° max)
+- [ ] Brick damage flash tints toward the brick's own hue, never pure white
 
 ### Visual Polish
 - [ ] Combo label centered, font scales, bounce-in

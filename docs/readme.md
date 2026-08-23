@@ -77,12 +77,15 @@ res://
 - **Ball containment**: any screen exit counts as a loss (idempotent handler) + redundant bounds fallback in `_physics_process()` — no phantom balls
 - **Launch input suppression**: `suppress_launch_until_release` is set only on title-screen transition; flag clears on first release regardless of phase; normal READY states accept the next press immediately
 - **Ball adaptive substeps**: up to 96 steps per physics tick (`MAX_PHYSICS_STEPS`); residual move for severe frame hitches; prevents missed collisions in endless mode
-- **Rebound minimum upward**: paddle rebound enforces `MIN_UPWARD_COMPONENT = 0.38` to prevent shallow wall-rally loops
+- **Rebound minimum upward**: paddle rebound enforces `Ball.MIN_UPWARD_COMPONENT = 0.42` to prevent shallow wall-rally loops; full edge hits deflect up to ~45° from vertical
 - **Durable brick scoring**: non-lethal hits return `score_points = 0`; only destruction awards points; `refresh_damage_visuals()` updates persistent HP label, health bar, and progressive damage color
 - **Sticky context prompt**: `sticky_ball_caught` / `sticky_ball_released` signals drive a distinct "AIM WITH PADDLE" HUD prompt
 - **Power-up round-clear grace**: power-ups collected in the same frame as `ROUND_CLEAR` resolve their effects instead of being silently dropped
-- **Visual hierarchy**: standard bricks darkened 12% for idle state; hit flashes remain bright white; slow overlay reduced to 0.10 alpha
-- **Semantic color palette**: `GameTheme` replaced NEON_* constants with ACCENT/SUCCESS/INFO/WARNING/DANGER/BRICK_BOSS/BACKGROUND/BORDER_SUBTLE/TEXT_PRIMARY/TEXT_MUTED; old NEON_* names preserved as aliases for backward compat
+- **Visual hierarchy**: standard bricks idle on muted `ROW_COLORS` bands (row color blended 50% toward TEXT_MUTED, darkened 12%); hit flashes lighten the brick's own hue (`base_color.lightened(0.75)`); slow overlay reduced to 0.10 alpha
+- **Semantic color palette**: `GameTheme` provides ACCENT/SUCCESS/INFO/WARNING/DANGER/BRICK_BOSS/BACKGROUND/BORDER_SUBTLE/TEXT_PRIMARY/TEXT_MUTED; legacy NEON_* aliases removed after full migration
+- **Global font**: wired via `gui/theme/custom_font` pointing at `res://assets/fonts/Mono-Bold.ttf` (a `[font]` config section is invalid in Godot 4)
+- **Paddle input priority**: keyboard owns movement until the mouse actually moves; releasing keys with a stationary cursor stops the paddle instead of snapping to the cursor
+- **Multiball over-cap**: pickups collected at `MAX_BALLS` convert to a +50 score bonus with popup instead of spawning nothing
 - **Ball pop tween lifecycle**: `pop_tween` member stored, killed before recreate; squash/stretch `Vector2(1.16, 0.88) → Vector2.ONE` elastic; always begins from `Vector2.ONE`
 - **Feedback density caps**: max 2 score popups and 2 shake requests per physics frame; priority pass-through for scores ≥100; 28ms brick-hit audio cooldown
 - **AudioStreamPlayer pooling**: 12-player preallocated pool in `AudioManager`; round-robin reuse eliminates per-effect node allocation churn during dense gameplay
