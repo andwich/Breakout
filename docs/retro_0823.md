@@ -30,8 +30,9 @@ Applied the actionable items from `docs/Feedback 0815 2340.md` as ten surgical c
 - **`game/tween_helper.gd`** (new) — `TweenHelper.kill_if_valid()` static utility; adopted across `main.gd` (7 sites), `brick.gd` (3), `ball.gd` (2), `hud.gd` (1). Early-return guard in `_shake_camera`, hud loop kills, and ScreenTransition's `_replace_fade_tween()` intentionally unchanged.
 
 ### Docs (C10)
-- **`AGENTS.md`** — Rules 16/20 updated (0.42 constant, hue-tinted flash, muted bands); checklist items updated/added (upward wedge escape, keyboard/mouse handoff, over-cap multiball, edge-hit steepness, flash tint).
+- **Docs (C10)**: AGENTS.md rules 16/20 updated (0.42 constant, hue-tinted flash, muted bands); checklist items updated/added (upward wedge escape, keyboard/mouse handoff, over-cap multiball, edge-hit steepness, flash tint).
 - **`docs/readme.md`** — Same corrections plus new notes on font wiring, input priority, over-cap multiball.
+- **Tests** — `tests/smoke_0823.gd` headless runtime smoke added; manual playtest passed.
 
 ## Corrections to feedback doc
 1. Proposed `gui/theme/default_font` / `theme/default_font_size` are not valid Godot 4 settings → used `gui/theme/custom_font`.
@@ -47,3 +48,6 @@ Applied the actionable items from `docs/Feedback 0815 2340.md` as ten surgical c
 
 ## Validation
 - Godot v4.7.1 headless editor parse after every commit — **PASS** (zero script errors, all gates clean)
+- **`tests/smoke_0823.gd`** (new) — headless runtime smoke: NEON alias removal, TweenHelper semantics, brick band/damage/particle colors (both max_hp paths), stuck-ball escape upward across 30 random wedge directions, rebound constants. ALL PASS ×4 runs (`godot --headless --path . -s res://tests/smoke_0823.gd`)
+- `-s` script environment findings (documented in test header): `add_child` before first frame never enters tree; autoloads absent; headless viewport is tiny
+- Manual in-engine playtest per new checklist items (font, edge steepness, keyboard/mouse handoff, over-cap multiball, flash tint, row bands, regression sweep) — **PASS**
