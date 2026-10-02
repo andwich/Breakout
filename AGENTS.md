@@ -23,13 +23,13 @@ res://
 │   ├── level_builder.gd   # Brick geometry and spawning
 │   └── powerup_registry.gd # Central power-up metadata (icons, colors, durations, weights)
 ├── autoload/
-│   ├── audio_manager.gd   # Synthesized sound effects (8 tones, play-and-forget)
+│   ├── audio_manager.gd   # Synthesized SFX (8 tones, WAVs cached once in _ready, play-and-forget)
 │   ├── game_theme.gd      # Semantic color constants (ACCENT, SUCCESS, INFO, WARNING, DANGER, etc.)
 │   ├── run_state.gd       # Transient: start_level, last_score
 │   ├── save_data.gd       # Persistence: get_high_score(), save_high_score()
 │   └── screen_transition.gd # Scene fade transitions (deadlock guard, public API)
 ├── entities/
-│   ├── paddle.gd          # Movement, sticky, width effects, wall bounds, edge warnings
+│   ├── paddle.gd          # Movement, sticky, tweened width (visual_width), wall bounds, edge warnings
 │   ├── ball.gd            # Physics (substep anti-tunneling), launch, aim, collision, stuck escape
 │   ├── brick.gd           # HP, damage, destruction, row_color, shader caching, damage feedback
 │   ├── powerup.gd         # Collection, falling animation (reads PowerUpRegistry)
@@ -41,6 +41,10 @@ res://
     ├── title_screen.gd    # Title card (high score, controls, HBox legend)
     ├── hud.gd             # Score, lives, multi-effect timer strip, level intro, pause text
     └── victory.gd         # Win screen → endless entry
+└── tests/
+    ├── smoke_0823.gd      # `-s` headless checks (banding, flash, escape invariant)
+    ├── smoke_0827.gd      # Scene-run harness: HUD, paddle width, audio cache, combo window
+    └── smoke_0827.tscn    # Entry scene for the harness (autoloads must be registered)
 ```
 
 ---
