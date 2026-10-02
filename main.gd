@@ -78,6 +78,7 @@ func _run_setup() -> void:
 	_combo_timer = Timer.new()
 	_combo_timer.one_shot = true
 	_combo_timer.wait_time = 0.6
+	_sync_combo_timer_wait()
 	_combo_timer.timeout.connect(_reset_combo)
 	add_child(_combo_timer)
 
@@ -134,6 +135,7 @@ func _start_new_run(start_level: int = 1) -> void:
 	_life_lost_pending = false
 	get_tree().paused = false
 	_restore_ball_speeds()
+	_sync_combo_timer_wait()
 	_combo_count = 0
 	_combo_timer.stop()
 	TweenHelper.kill_if_valid(_combo_tween)
@@ -174,6 +176,7 @@ func _load_level(level: int) -> void:
 	hud.clear_all_effect_timers()
 	_slow_timer.stop()
 	_slow_factor = 1.0
+	_sync_combo_timer_wait()
 	for child in balls_container.get_children():
 		child.queue_free()
 	for child in bricks_container.get_children():
@@ -577,8 +580,15 @@ func _flash_effect(at: Vector2, color: Color, size: float = 20.0) -> void:
 	add_child(ring)
 	ring.play(at, color, size, 3.0, 0.3)
 
+## The combo window is measured in real time while the ball runs slower under
+## SLOW_BALLS, so the window widens inversely with `_slow_factor` (0.6 -> 1.0s).
+func _sync_combo_timer_wait() -> void:
+	if _combo_timer:
+		_combo_timer.wait_time = 0.6 / _slow_factor
+
 func _apply_slow_balls(duration: float) -> void:
 	_slow_factor = 0.6
+	_sync_combo_timer_wait()
 	for b in balls_container.get_children():
 		if b is Ball:
 			b.speed = b.base_speed * _level_config["speed_mult"] * _slow_factor
@@ -595,6 +605,7 @@ func _apply_slow_balls(duration: float) -> void:
 func _restore_ball_speeds() -> void:
 	hud.clear_effect_timer(PowerUpRegistry.effect_id_for(PowerUp.Type.SLOW_BALLS))
 	_slow_factor = 1.0
+	_sync_combo_timer_wait()
 	for b in balls_container.get_children():
 		if b is Ball:
 			b.speed = b.base_speed * _level_config["speed_mult"]
