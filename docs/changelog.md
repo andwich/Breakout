@@ -4,6 +4,37 @@ All notable changes to Breakout are documented here. Derived from session retro 
 
 ---
 
+## 2026-10-01 — Session 31: Feedback 0827 — HUD Copy, Brick Readability, Audio Cache, Paddle Width Tween (+ P0 scene blocker)
+
+### Fixed
+- **P0 scene corruption (unplanned, required to run)** — `ui/hud.tscn` (13) and `main.tscn` (1) used invalid `.tscn` variant literals (`Color("#00E5FF")`, `Color(GameTheme.BACKGROUND)`); both scenes failed to parse, so **gameplay never loaded**. Converted to numeric literals (colors bit-identical). The `--editor --quit` parse gate reports zero errors for these, which is why 13 "validated" sessions shipped an un-loadable main scene
+- **Level intro ignored its arguments** — `hud.gd::show_level_intro()` hardcoded `"GO!"` and an empty subtitle; now renders the authored `title` + `subtitle` (subtitle hides when empty), with `reset_size()` before the pivot so the autowrap grow stays centered
+- **Extra Life hearts rendered transparent** — the loss fade left `modulate.a = 0`, `scale = 1.5` and a pending `visible = false` on hidden hearts; `update_lives()` now restores at show-time and cancels the heart's own in-flight fade via `_heart_tweens[]`
+- **Boss health bar overflow** — `refresh_damage_visuals()` used a 56px base against a 40px bar/background pair; now `40.0 * health_ratio`, matching `_update_visual()`
+- **Combo window unfair while slowed** — 0.6s real-time window now scales to `0.6 / _slow_factor` via `_sync_combo_timer_wait()` at every `_slow_factor` mutation site (1.0s under SLOW_BALLS)
+- **Hot-path audio synthesis** — `play_launch()` / `play_powerup()` / `play_paddle_hit()` re-synthesized thousands of samples and allocated a WAV per call; now cached once in `_ready()` (byte-identical output)
+
+### Changed
+- **Metal brick damage** — `brick.gd` metal branch darkens with HP like the boss: `Color(0.7, 0.7, 0.9).darkened(1.0 - clampf(ratio, 0.3, 1.0))` on sprite + particles, same alpha ramp
+- **Paddle width tween** — `paddle.gd` gained `visual_width` + `_width_tween` and `_set_paddle_width(width, animated)`; Big Paddle grows/shrinks over 0.15s, `reset()` snaps. All drawing and physics geometry (glow, edge warnings, aim origin, wall bounds) read `visual_width`; `get_ball_attach_offset()` stays intent-based. Removed the duplicate `queue_redraw()` from `_process()`; `_exit_tree()` kills the width tween
+- **Differentiated power-up durations** — `powerup_registry.gd`: STICKY 8.0→**10.0**, LASER 8.0→**6.0**, SLOW_BALLS 8.0→**6.0**, BIG_PADDLE 8.0 unchanged
+- **No hardcoded duration defaults** — `apply_big_paddle()`, `enable_sticky()`, `LaserManager.activate()` take required `duration_sec`; registry is the only tuning source
+
+### Added
+- **`tests/smoke_0827.gd` + `tests/smoke_0827.tscn`** — 100-check scene-run runtime harness (exit 0/1): boss bar contract, metal darkening formula/monotonicity/clamp floor, cached WAV sample counts/format/stream identity, registry durations, hardcoded-default source guards, live combo window 0.6s ↔ 1.0s, intro copy, heart loss → residue → restore incl. mid-fade rescue, paddle width lockstep
+- **AGENTS.md rules 30–34** — numeric scene literals, paddle width authority, cached audio, registry-owned durations, slow-scaled combo window; validation workflow now runs scenes + smoke suites, not just the editor parse
+
+### Validation
+- `--editor --quit` parse gate — **PASS** (0 errors/warnings)
+- `res://tests/smoke_0827.tscn` — **PASS** (100/100), exit 0, no engine noise
+- `res://main.tscn --quit-after 400` / `res://ui/title_screen.tscn --quit-after 200` — exit 0, 0 errors (main.tscn previously failed to load)
+- `tests/smoke_0823.gd` — **PASS** (no regression) — Godot 4.7.2.stable headless
+
+### Docs
+`docs/retro_1001.md` created; `docs/readme.md`, `AGENTS.md`, `docs/history.md`, `docs/architecture.md`, `docs/changelog.md` updated
+
+---
+
 ## 2026-08-15 — Session 29: Retheme — Calm Dashboard → Neon Arcade
 
 ### Changed
