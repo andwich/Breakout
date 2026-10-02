@@ -30,6 +30,9 @@ var _checks: int = 0
 
 func _ready() -> void:
 	await _run_all()
+	# Let queued frees/physics settle so exit does not report leaked RIDs.
+	await get_tree().process_frame
+	await get_tree().process_frame
 	if _failures == 0:
 		print("SMOKE 0827 RESULT: ALL PASS (%d checks)" % _checks)
 		get_tree().quit(0)
@@ -39,6 +42,10 @@ func _ready() -> void:
 
 
 func _run_all() -> void:
+	# add_child() is blocked while the tree is still wiring up the harness itself;
+	# wait until the loop is live before spawning anything.
+	await get_tree().process_frame
+	await get_tree().process_frame
 	# Structural (no frames required).
 	_test_registry_durations()
 	_test_no_hardcoded_duration_defaults()
