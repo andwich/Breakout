@@ -143,6 +143,11 @@ res://
 27. **Overlay tween ownership** — `main.gd` flash/slow overlay tweens stored as `_flash_tween`/`_slow_tween` members; killed before recreate; reset in `_start_new_run()`
 28. **Headless validation gate** — after every GDScript edit, run `godot --headless --path . --editor --quit` and fix all parse errors before reporting completion
 29. **Explicit scene preloads** — declare scene constants as `const X: PackedScene = preload(...)`; never rely on `:=` inference for preloads (a missing or corrupt scene produces a cascade of inference errors). Keep `.tscn` section order canonical: all `[sub_resource]` blocks must precede all `[node]` blocks
+30. **Scene literals must be numeric** — `.tscn` property values accept `Color(r, g, b, a)` floats only. `Color("#00E5FF")` and `Color(GameTheme.BACKGROUND)` are *parse errors* that the editor scan gate does **not** report; they surface only as `Failed loading resource` when the scene is actually instantiated. Put colors in `.tscn` as floats (or set them from scripts), and validate with a scene run, not just `--editor --quit`
+31. **Paddle width: `target_width` is intent, `visual_width` is reality** — never write `_shape.size.x` / `sprite.offset_*` / `target_width` directly; call `_set_paddle_width(width, animated)` (animated for power-ups, `false` in `reset()`). All drawing (`_draw()` glow, edge warnings, aim origin) and physics geometry (wall bounds, mouse dead zone) read `visual_width` because the collision shape tweens with it; `get_ball_attach_offset()` still returns the intent-based offset
+32. **Cached audio only** — `play_*()` functions are one-liners over a WAV rendered once in `_ready()` (`_launch_wav`, `_powerup_wav`, `_paddle_hit_wav`, `_brick_tone_pool`). Never synthesize samples inside a play function; add a `_make_*_wav()` static maker plus a cached member instead
+33. **Registry owns durations** — effect entry points (`paddle.apply_big_paddle()`, `paddle.enable_sticky()`, `laser_manager.activate()`) take a required `duration_sec: float` with **no default**; `PowerUpRegistry.DEFS["duration"]` is the single tuning source (BIG_PADDLE 8.0 / STICKY 10.0 / LASER 6.0 / SLOW_BALLS 6.0). Untimed types stay 0.0
+34. **Combo window follows slow** — `_apply_slow_balls()` / `_restore_ball_speeds()` / `_load_level()` call `_sync_combo_timer_wait()` after every `_slow_factor` mutation so the 0.6s combo window scales to `0.6 / _slow_factor` (1.0s while slowed)
 
 ---
 
@@ -154,10 +159,22 @@ Every GDScript change must follow this sequence before the task is considered co
 Make the requested code changes.
 
 ### 2. Headless Validation
-Run the Godot editor in headless mode to parse all scripts:
+Run the Godot editor in headless mode to parse all scripts. Use the Godot 4.x binary on
+this machine (currently `/tmp/godotbin/Godot.app/Contents/MacOS/Godot`):
 
 ```bash
-"/Applications/Godot.app/Contents/MacOS/Godot" --headless --path /path/to/Breakout --editor --quit
+GODOT="/tmp/godotbin/Godot.app/Contents/MacOS/Godot"
+"$GODOT" --headless --path /path/to/Breakout --editor --quit
+```
+
+The editor gate parses **scripts** only. It does *not* deep-parse `.tscn` property values,
+so corrupt scenes (see rule 30) pass it silently. Always also run the scenes and the smoke
+harness — both must exit 0:
+
+```bash
+"$GODOT" --headless --path /path/to/Breakout res://main.tscn --quit-after 60
+"$GODOT" --headless --path /path/to/Breakout res://tests/smoke_0827.tscn   # 100 checks
+"$GODOT" --headless --path /path/to/Breakout -s res://tests/smoke_0823.gd
 ```
 
 ### 3. Fix All Parser Errors
@@ -218,6 +235,13 @@ When making changes, verify:
 - [ ] Brick-hit audio does not overlap into harsh click bursts during rapid destruction
 - [ ] Edge paddle hits exit visibly steeper than center hits (~45° max)
 - [ ] Brick damage flash tints toward the brick's own hue, never pure white
+- [ ] `main.tscn` loads headless with zero `Failed loading resource` (scene literals)
+- [ ] Metal bricks darken visibly per hit; 1-HP-of-8 stays above black
+- [ ] Boss health bar never overflows its 40px background
+- [ ] Re-awarded heart (Extra Life) is fully opaque and unscaled, even if collected mid loss-fade
+- [ ] Level intro shows the authored level name + subtitle, not "GO!"
+- [ ] Big Paddle grows/shrinks over ~0.15s instead of snapping; `reset()` snaps
+- [ ] Combo window stretches while SLOW_BALLS is active and returns to 0.6s
 
 ### Visual Polish
 - [ ] Combo label centered, font scales, bounce-in
@@ -228,6 +252,7 @@ When making changes, verify:
 - [ ] Sticky pulsing border between catches
 - [ ] Power-up icon rotates together
 - [ ] Launch sound: punchy chirp, not flat sine sweep
+- [ ] Launch / power-up / paddle-hit audio cached: no per-call synthesis, identical output
 
 ---
 
