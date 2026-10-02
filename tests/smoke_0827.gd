@@ -128,7 +128,7 @@ func _test_no_hardcoded_duration_defaults() -> void:
 		"LaserManager.activate() has no default duration")
 	_check(not _source("res://entities/paddle.gd").contains("duration_sec: float = "),
 		"paddle.gd free of hardcoded duration defaults")
-	_check(not _source("entities/laser_manager.gd").contains("duration_sec: float = "),
+	_check(not _source("res://entities/laser_manager.gd").contains("duration_sec: float = "),
 		"laser_manager.gd free of hardcoded duration defaults")
 	# Registry remains the single source: caller passes it straight through.
 	var main_src := _source("res://main.gd")
@@ -230,9 +230,9 @@ func _test_boss_health_bar() -> void:
 	_check(brick._health_bar.size.x <= brick._health_bar_bg.size.x + 0.001,
 		"bar never overflows its background (pre-fix regression: 56px base)")
 
-	brick.take_damage(2)
+	brick.take_damage(1)
 	_check(is_equal_approx(brick._health_bar.size.x, BOSS_BAR_WIDTH * 0.6),
-		"bar tracks 60% HP (got %.1f)" % brick._health_bar.size.x)
+		"bar tracks 3/5 HP (got %.1f)" % brick._health_bar.size.x)
 	brick.free()
 
 
@@ -259,8 +259,8 @@ func _test_metal_darkening() -> void:
 		_check(_colors_close(colors[i], _expected_metal(hp, 3)),
 			"metal hp=%d color follows clamp formula (got %s)" % [hp, colors[i]])
 	_check(colors[1].v < colors[0].v and colors[2].v < colors[1].v,
-			"metal darkening is monotonic (%.3f > %.3f > %.3f)"
-			% [colors[0].v, colors[1].v, colors[2].v])
+		"metal darkening is monotonic (%.3f > %.3f > %.3f)"
+		% [colors[0].v, colors[1].v, colors[2].v])
 	_check(absf(colors[2].r - colors[0].r) > 0.05,
 		"damage step is visible to the eye (%.3f -> %.3f)" % [colors[0].r, colors[2].r])
 	_check(is_equal_approx(colors[2].r / colors[2].g, colors[0].r / colors[0].g)
@@ -338,7 +338,7 @@ func _test_audio_wav_cache() -> void:
 	_check(unique == 4, "four play calls touched four pool slots, all cached (got %d)" % unique)
 	_check(am.get_child_count() == pool_before, "no AudioStreamPlayer spawned per effect")
 
-	var launch_fn := _func_body("autoload/audio_manager.gd", "play_launch")
+	var launch_fn := _func_body("res://autoload/audio_manager.gd", "play_launch")
 	_check(launch_fn.contains("_play_stream(_launch_wav, -8.0)")
 			and not launch_fn.contains("AudioStreamWAV.new()"),
 		"play_launch() is a one-liner over the cached wav")
@@ -471,7 +471,7 @@ func _test_paddle_width_tween() -> void:
 	_check(paddle._width_tween != null, "grow tween is live")
 	_check(paddle.is_big_paddle_active(), "big paddle reported active during growth")
 
-	var grew := await _poll_width(paddle, big)
+	var grew: bool = await _poll_width(paddle, big)
 	_check(grew, "rendered width reaches %.0fpx by tween end (got %.1f)" % [big, paddle.visual_width])
 	_check(paddle._width_tween == null, "width tween released on completion")
 	_check(is_equal_approx(paddle.sprite.offset_left, -big / 2.0)
@@ -489,7 +489,7 @@ func _test_paddle_width_tween() -> void:
 	_check(is_equal_approx(paddle._shape.size.x, paddle.visual_width),
 		"collision shape width == visual_width every frame")
 
-	var shrank := await _poll_width(paddle, normal)
+	var shrank: bool = await _poll_width(paddle, normal)
 	_check(shrank, "width returns to %.0fpx (got %.1f)" % [normal, paddle.visual_width])
 	_check(paddle._width_tween == null, "shrink tween released")
 	_check(not paddle.is_big_paddle_active(), "big paddle no longer active")
