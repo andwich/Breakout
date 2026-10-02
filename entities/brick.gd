@@ -148,7 +148,7 @@ func refresh_damage_visuals() -> void:
 		_hp_label.text = str(_hp)
 		_hp_label.visible = true
 	if _health_bar:
-		_health_bar.size.x = 56.0 * health_ratio
+		_health_bar.size.x = 40.0 * health_ratio
 	if _sprite and brick_type == "standard":
 		_sprite.color = row_color.lerp(GameTheme.TEXT_MUTED, 0.5).darkened((1.0 - health_ratio) * 0.16)
 
@@ -171,12 +171,15 @@ func _update_visual():
 			var alpha := 1.0 - float(max_hp - _hp) / float(max_hp) * 0.45
 			modulate.a = clampf(alpha, 0.55, 1.0)
 		"metal":
+			# Progressive damage darkening, mirroring the boss branch.
+			var metal_ratio := clampf(float(_hp) / float(max_hp), 0.3, 1.0)
+			var metal_color := Color(0.7, 0.7, 0.9).darkened(1.0 - metal_ratio)
 			if _sprite:
-				_sprite.color = Color(0.7, 0.7, 0.9)
+				_sprite.color = metal_color
 			if _particles:
 				var pm := _particles.process_material as ParticleProcessMaterial
 				if pm:
-					pm.color = Color(0.7, 0.7, 0.9)
+					pm.color = metal_color
 			var alpha := 1.0 - float(max_hp - _hp) / float(max_hp) * 0.45
 			modulate.a = clampf(alpha, 0.55, 1.0)
 		_:
