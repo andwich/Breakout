@@ -23,7 +23,7 @@ A modern breakout game inspired by Atari's classic, built with **Godot 4.x** fea
 - **Audio**: Synthesized tones cached once at startup (brick hit, paddle hit, launch, power-up, etc.)
 - **Animated paddle**: Big Paddle grows/shrinks over ~0.15s instead of snapping
 - **Persistent high scores**
-- **Headless smoke suites**: `tests/smoke_0823.gd` (`-s`) and `tests/smoke_0827.tscn` (scene-run, 100 checks)
+- **Headless smoke suites**: `tests/smoke_0823.gd` (`-s`) and `tests/smoke_0827.tscn` (scene-run, 107 checks)
 
 ---
 
@@ -115,7 +115,7 @@ GODOT="/tmp/godotbin/Godot.app/Contents/MacOS/Godot"   # Godot 4.x binary on thi
 
 "$GODOT" --headless --path . --editor --quit                          # script parse gate
 "$GODOT" --headless --path . res://main.tscn --quit-after 60          # scene loads + ticks
-"$GODOT" --headless --path . res://tests/smoke_0827.tscn              # 100 runtime checks
+"$GODOT" --headless --path . res://tests/smoke_0827.tscn              # 107 runtime checks
 "$GODOT" --headless --path . -s res://tests/smoke_0823.gd             # legacy smoke checks
 ```
 
@@ -139,7 +139,7 @@ boss bar width + progressive metal darkening (`entities/brick.gd`), cached launc
 WAVs (`autoload/audio_manager.gd`), tweened paddle width via `visual_width` (`entities/paddle.gd`),
 slow-scaled combo window (`main.gd`), differentiated registry durations (8/10/6/6) with the hardcoded
 8.0s defaults removed — plus a **P0**: `main.tscn` and `hud.tscn` contained invalid color literals and
-failed to parse, so gameplay never loaded. New 100-check runtime harness in `tests/smoke_0827.tscn`.
+failed to parse, so gameplay never loaded. New 107-check runtime harness in `tests/smoke_0827.tscn` (including a scene-color parity guard against `GameTheme`).
 Detail: [docs/retro_1001.md](retro_1001.md).
 
 ---

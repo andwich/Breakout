@@ -21,12 +21,12 @@ All notable changes to Breakout are documented here. Derived from session retro 
 - **No hardcoded duration defaults** — `apply_big_paddle()`, `enable_sticky()`, `LaserManager.activate()` take required `duration_sec`; registry is the only tuning source
 
 ### Added
-- **`tests/smoke_0827.gd` + `tests/smoke_0827.tscn`** — 100-check scene-run runtime harness (exit 0/1): boss bar contract, metal darkening formula/monotonicity/clamp floor, cached WAV sample counts/format/stream identity, registry durations, hardcoded-default source guards, live combo window 0.6s ↔ 1.0s, intro copy, heart loss → residue → restore incl. mid-fade rescue, paddle width lockstep
+- **`tests/smoke_0827.gd` + `tests/smoke_0827.tscn`** — 107-check scene-run runtime harness (exit 0/1): scene color literals pinned to `GameTheme` (catches bad hex→float conversions), boss bar contract, metal darkening formula/monotonicity/clamp floor, cached WAV sample counts/format/stream identity, registry durations, hardcoded-default source guards, live combo window 0.6s ↔ 1.0s, intro copy, heart loss → residue → restore incl. mid-fade rescue, paddle width lockstep
 - **AGENTS.md rules 30–34** — numeric scene literals, paddle width authority, cached audio, registry-owned durations, slow-scaled combo window; validation workflow now runs scenes + smoke suites, not just the editor parse
 
 ### Validation
 - `--editor --quit` parse gate — **PASS** (0 errors/warnings)
-- `res://tests/smoke_0827.tscn` — **PASS** (100/100), exit 0, no engine noise
+- `res://tests/smoke_0827.tscn` — **PASS** (107/107), exit 0, no engine noise
 - `res://main.tscn --quit-after 400` / `res://ui/title_screen.tscn --quit-after 200` — exit 0, 0 errors (main.tscn previously failed to load)
 - `tests/smoke_0823.gd` — **PASS** (no regression) — Godot 4.7.2.stable headless
 

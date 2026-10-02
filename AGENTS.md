@@ -177,7 +177,7 @@ harness — both must exit 0:
 
 ```bash
 "$GODOT" --headless --path /path/to/Breakout res://main.tscn --quit-after 60
-"$GODOT" --headless --path /path/to/Breakout res://tests/smoke_0827.tscn   # 100 checks
+"$GODOT" --headless --path /path/to/Breakout res://tests/smoke_0827.tscn   # 107 checks
 "$GODOT" --headless --path /path/to/Breakout -s res://tests/smoke_0823.gd
 ```
 

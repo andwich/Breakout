@@ -65,7 +65,7 @@ main.tscn (Main : Node2D)
 | File | Role |
 |------|------|
 | `tests/smoke_0823.gd` | `-s` headless checks: palette aliases, brick banding/damage colors, `TweenHelper`, stuck-ball escape invariant |
-| `tests/smoke_0827.gd` | Scene-run runtime harness (100 checks): HUD intro copy + heart restore, boss bar width, metal darkening, cached WAVs, paddle width tween, slow-scaled combo window |
+| `tests/smoke_0827.gd` | Scene-run runtime harness (107 checks): HUD intro copy + heart restore, scene color literals vs `GameTheme`, boss bar width, metal darkening, cached WAVs, paddle width tween, slow-scaled combo window |
 | `tests/smoke_0827.tscn` | Entry scene for the harness — required because `-s` does not register autoload named-globals |
 
 ### Autoloads (Singletons)
