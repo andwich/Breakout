@@ -1,6 +1,6 @@
 78098b89c88a74ebe8c20117b8754620
 ::res://::1790913431
-AGENTS.md::TextFile::-1::1787484458::0::1::::<><><>0<>0<><>::
+AGENTS.md::TextFile::-1::1790915537::0::1::::<><><>0<>0<><>::
 main.gd::GDScript::2998372749516647317::1790914617::0::1::::<>Node2D<><>0<>0<><>::
 main.tscn::PackedScene::-1::1790915276::0::1::::<><><>0<>0<><>::res://main.gd<>res://entities/paddle.tscn<>res://entities/laser_manager.gd<>res://ui/hud.tscn<>res://shaders/scanline.gdshader<>res://entities/playfield_border.gd
 ::res://assets/::1786765705
@@ -13,13 +13,14 @@ game_theme.gd::GDScript::5693411293923882430::1787484270::0::1::::<>Node<><>0<>0
 run_state.gd::GDScript::8654542282706221109::1777953624::0::1::::<>Node<><>0<>0<><>::
 save_data.gd::GDScript::2027501204691251224::1786303066::0::1::::<>Node<><>0<>0<><>::
 screen_transition.gd::GDScript::7328282335301627452::1786420619::0::1::::<>CanvasLayer<><>0<>0<><>::
-::res://docs/::1790654632
-architecture.md::TextFile::-1::1786850863::0::1::::<><><>0<>0<><>::
-changelog.md::TextFile::-1::1786850863::0::1::::<><><>0<>0<><>::
+::res://docs/::1790915466
+architecture.md::TextFile::-1::1790915610::0::1::::<><><>0<>0<><>::
+changelog.md::TextFile::-1::1790915635::0::1::::<><><>0<>0<><>::
 Feedback 0827.md::TextFile::-1::1790654588::0::1::::<><><>0<>0<><>::
-history.md::TextFile::-1::1787484567::0::1::::<><><>0<>0<><>::
-readme.md::TextFile::-1::1787484496::0::1::::<><><>0<>0<><>::
+history.md::TextFile::-1::1790915662::0::1::::<><><>0<>0<><>::
+readme.md::TextFile::-1::1790915675::0::1::::<><><>0<>0<><>::
 retro_0823.md::TextFile::-1::1787494319::0::1::::<><><>0<>0<><>::
+retro_1001.md::TextFile::-1::1790915477::0::1::::<><><>0<>0<><>::
 ::res://docs/_Archive/::1790654632
 additional thoughts 0501.md::TextFile::-1::1777686372::0::1::::<><><>0<>0<><>::
 breakout-implementation-plan 0510 2035.md::TextFile::-1::1778460064::0::1::::<><><>0<>0<><>::
@@ -115,7 +116,7 @@ tween_helper.gd::GDScript::5860783860242857252::1787484331::0::1::::TweenHelper<
 ::res://shaders/::1786304623
 brick_glow.gdshader::Shader::3128636571185832827::1778044473::0::1::::<><><>0<>0<><>::
 scanline.gdshader::Shader::7776086058787016724::1778033023::0::1::::<><><>0<>0<><>::
-::res://tests/::1790914991
+::res://tests/::1790915385
 smoke_0823.gd::GDScript::6853163755448677057::1787489548::0::1::::<>SceneTree<><>0<>0<><>::
 smoke_0827.gd::GDScript::2515344867830783541::1790915349::0::1::::<>Node<><>0<>0<><>::
 smoke_0827.tscn::PackedScene::-1::1790914991::0::1::::<><><>0<>0<><>::res://tests/smoke_0827.gd
