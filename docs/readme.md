@@ -99,6 +99,29 @@ res://
 - **Explicit scene typing**: `BALL_SCENE`/`BRICK_SCENE`/`POWERUP_SCENE` declared as `const X: PackedScene` — a missing or corrupt `.tscn` surfaces as one clear preload error instead of an inference cascade
 - **Scene section ordering**: `.tscn` files must declare all `[sub_resource]` blocks before any `[node]` blocks; a `sub_resource` after nodes fails parsing (`Unknown tag 'sub_resource'`) and breaks every `preload()` of that scene
 
+- **Paddle width authority**: `target_width` is intent, `visual_width` is reality — `_set_paddle_width()` tweens the collision shape, sprite offsets and `visual_width` in lockstep; `_draw()`, wall bounds and the aim guide all read `visual_width` so art never leads physics
+- **Cached audio synthesis**: launch / power-up / paddle-hit WAVs are synthesized once in `AudioManager._ready()` (`_make_*_wav()` makers) and replayed through the pooled players — no per-call 22 kHz sample loops
+- **Registry-owned durations**: `PowerUpRegistry.DEFS` is the only duration source; `apply_big_paddle()` / `enable_sticky()` / `activate()` take a required `duration_sec` with no default
+- **Slow-scaled combo window**: `_sync_combo_timer_wait()` keeps the 0.6s combo window honest while SLOW_BALLS runs the balls at 60% (`0.6 / _slow_factor`)
+- **HUD restore at show-time**: a heart re-awarded by Extra Life cancels its own in-flight loss fade and resets `modulate.a` / `scale` in the same pass that makes it visible — residue from the fade never reaches the player
+- **Scene literal syntax**: `.tscn` color properties take numeric components only — `Color("#RRGGBB")` and `Color(GameTheme.X)` are parse errors that the `--editor --quit` gate does **not** surface (see `docs/retro_1001.md`)
+
+---
+
+## Validation
+
+```bash
+GODOT="/tmp/godotbin/Godot.app/Contents/MacOS/Godot"   # Godot 4.x binary on this machine
+
+"$GODOT" --headless --path . --editor --quit                          # script parse gate
+"$GODOT" --headless --path . res://main.tscn --quit-after 60          # scene loads + ticks
+"$GODOT" --headless --path . res://tests/smoke_0827.tscn              # 100 runtime checks
+"$GODOT" --headless --path . -s res://tests/smoke_0823.gd             # legacy smoke checks
+```
+
+All four must exit 0. `-s` scripts do **not** register autoload named-globals, so
+`hud.tscn` / `main.tscn` cannot be loaded there — that is why `smoke_0827` is a scene.
+
 ---
 
 ## Credits
