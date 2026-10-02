@@ -206,6 +206,28 @@ Standard bricks use `row_color.darkened(0.12).lerp(Color.WHITE, 0.05)` at idle i
 
 `Brick.refresh_damage_visuals()` runs after every non-lethal hit on multi-HP bricks. It updates `_hp_label` text, `_health_bar` size, and progressively darkens `_sprite.color` relative to health ratio. Standard bricks use `row_color.darkened((1.0 - health_ratio) * 0.16)`. The flash tween temporarily goes white and returns to the current post-damage base color — never the pre-damage color.
 
+The boss health bar shares one contract with its background: both are 40px wide, and the fill is `40.0 * health_ratio` in **both** `refresh_damage_visuals()` and `_update_visual()` (a 56px base in the former overran the background above ~71% HP). Metal bricks darkened like the boss since Session 31: `Color(0.7, 0.7, 0.9).darkened(1.0 - clampf(hp_ratio, 0.3, 1.0))` applied to sprite *and* particle material, with the same alpha ramp — the `0.3` clamp floor keeps a near-dead endless-wave brick readable instead of black.
+
+### Paddle Width: Intent vs Reality
+
+`target_width` is what the paddle *should* be; `visual_width` is what the sprite and collision shape *are* while a width change animates. All mutations go through `_set_paddle_width(width, animated)`, which kills any live `_width_tween`, then tweens `_apply_width_pixels(v)` (shape + sprite offsets + `visual_width`) over 0.15s — or snaps when `animated == false` (used by `reset()`, so a level load can never inherit a wide paddle). Drawing (`_draw()` glow, edge warnings, aim origin via `get_visual_ball_attach_offset()`) and physics bounds read `visual_width`, because the collision shape is the thing moving. `get_ball_attach_offset()` deliberately stays intent-based so every ball-attach call site is unaffected. `is_big_paddle_active()` stays `target_width`-based: it reports the power-up state, not the pixel width.
+
+### Cached Audio Synthesis
+
+`AudioManager` renders the launch sweep (2 646 samples), power-up arpeggio (5 512) and paddle thud (1 764) **once** in `_ready()` via static `_make_launch_wav()` / `_make_powerup_wav()` / `_make_paddle_hit_wav()` makers, storing them in `_launch_wav` / `_powerup_wav` / `_paddle_hit_wav`. `play_launch()` / `play_powerup()` / `play_paddle_hit()` are one-liners over those streams at the original volumes. Before this, every launch, pickup and paddle touch re-ran a 22 kHz synthesis loop and allocated a fresh `AudioStreamWAV` on the hot path. Combined with the 12-player pool, effect playback is allocation-free.
+
+### Registry-Owned Durations
+
+`PowerUpRegistry.DEFS["duration"]` is the single tuning source: BIG_PADDLE 8.0s, STICKY 10.0s, LASER 6.0s, SLOW_BALLS 6.0s (differentiated by impact — Sticky needs aiming headroom, Laser is strong but brief). `PowerUp._on_body_entered()` emits the registry value, `main.gd` forwards it, and the effect entry points (`paddle.apply_big_paddle()`, `paddle.enable_sticky()`, `laser_manager.activate()`) declare a **required** `duration_sec: float` — no defaults, so a forgotten argument is a compile error rather than a silent 8.0 override.
+
+### Slow-Scaled Combo Window
+
+The combo window is real time (`Timer`), but a slowed ball covers less ground per second, so a fixed 0.6s window quietly gets harder while SLOW_BALLS is active. `_sync_combo_timer_wait()` sets `wait_time = 0.6 / _slow_factor` (1.0s when slowed) and is called after every `_slow_factor` mutation — `_apply_slow_balls()`, `_restore_ball_speeds()`, `_load_level()` — plus at run setup. Scoring and combo awarding are unchanged; only the window length moves.
+
+### HUD Restore At Show-Time
+
+`HUD.update_lives()` owns both directions of a heart's life. The loss animation leaves permanent residue (`modulate.a = 0`, `scale = 1.5`, plus a pending `visible = false` callback at +0.2s), so any heart that satisfies `i < new_lives` cancels its own tween in `_heart_tweens[i]` and resets alpha/scale in the *same* pass that makes it visible. Restoring at tween end would be too late: an Extra Life collected during the fade would re-show a translucent heart, or have it hidden again a moment later.
+
 ### Ball Containment
 
 Any screen exit is terminal: `_on_screen_exited()` is idempotent (`if not launched: return`) and emits exactly one `life_lost`. A redundant 64px bounds check in `_physics_process()` catches tunneling or notifier-regression cases so a ball can never remain a live off-screen "phantom" that soft-locks the round.
