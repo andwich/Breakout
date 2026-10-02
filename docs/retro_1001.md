@@ -58,7 +58,7 @@ collapses instead of reserving a row). `reset_size()` added before the pivot is 
 the title label uses `autowrap_mode`, so a longer authored name reflows and the
 `pivot_offset = size * 0.5` grow animation stays centered. Existing tween chain untouched.
 
-**1b `update_lives()` (lines 26, 32, 61–92)** — the loss fade leaves
+**1b `update_lives()` (lines 26, 32, 59–92)** — the loss fade leaves
 `modulate.a = 0`, `scale = 1.5` and `visible = false` on the heart forever, so an Extra
 Life re-show rendered a translucent giant heart; worse, an *in-flight* fade
 (`tween_callback(visible = false)` at +0.2s) re-hid a heart re-awarded inside the fade
@@ -134,7 +134,7 @@ SLOW_BALLS **6.0**. Untimed entries stay 0.0.
 `paddle.apply_big_paddle(duration_sec)`, `paddle.enable_sticky(duration_sec)` and
 `LaserManager.activate(duration_sec)` no longer default to 8.0 — a silent default that
 would have silently overridden the registry values from Fix 6 for any future caller that
-forgot the argument. All existing callers (`main.gd` 499/503/508) already forward the
+forgot the argument. All existing callers (`main.gd` 502/506/511) already forward the
 registry duration from `PowerUp.collected`, so removing the defaults is compile-checked
 and behavior-preserving. `enable_sticky()` is included with the two named call sites:
 same class of bug, same fix, one caller which already passes the value.
