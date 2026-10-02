@@ -5,7 +5,7 @@
 Applied the supervisor-corrected rollout of `docs/Feedback 0827.md` across seven code
 fixes, then fixed a **pre-existing P0 that the project's validation gate could never see**:
 `main.tscn` and `ui/hud.tscn` were unparseable, so gameplay never actually loaded.
-Validation grew a real runtime harness (`tests/smoke_0827.tscn`, 100 checks) that now
+Validation grew a real runtime harness (`tests/smoke_0827.tscn`, 107 checks) that now
 covers the behavior the `-s` parse gate cannot reach.
 
 All scoring, combo awarding, `take_damage()` contract, launch suppression, and sticky
@@ -43,6 +43,18 @@ named literal in `main.tscn` converted to their numeric equivalents
 (e.g. `Color("#00E5FF")` → `Color(0.000000, 0.898039, 1.000000, 1)`,
 `Color(GameTheme.BACKGROUND)` → `Color(0.011765, 0.019608, 0.043137, 1)`).
 No other `.tscn` file was affected; canonical section order verified intact everywhere.
+
+**Slip during the repair, caught before hand-off:** the first conversion script stripped the
+leading `#` in its regex group but sliced the captured digits as if the `#` were still there,
+so every HUD color landed one hex digit off (`#00E5FF` became a muddy green
+`Color(0.054902, 0.372549, 0.058824, 1)` instead of cyan). Both the `--editor --quit` gate
+and the scene run stayed silent — they validate syntax, not hue. Caught while reviewing
+`git diff`; both scenes were reverted to their pre-session state and reconverted with
+verified indices, and `_test_scene_color_literals()` was added to the smoke harness so every
+converted literal is pinned to the `GameTheme` constant it came from (`ScoreLabel == ACCENT`,
+`LevelLabel == WARNING`, `Heart1 == DANGER`, `HighScoreLabel == TEXT_MUTED`,
+`LevelCompleteLabel == WARNING`, `GameOverLabel == DANGER`, `BackgroundOverlay == BACKGROUND`).
+Lesson now in AGENTS.md rule 30: when the engine cannot check a value, the test suite must.
 
 ---
 
@@ -141,7 +153,7 @@ same class of bug, same fix, one caller which already passes the value.
 
 ### Fix 9 — Runtime smoke suite (`tests/smoke_0827.gd` + `tests/smoke_0827.tscn`, new)
 
-100 checks, exit code 0/1:
+107 checks, exit code 0/1:
 
 ```
 godot --headless --path . res://tests/smoke_0827.tscn
@@ -155,8 +167,9 @@ boss bar width contract (incl. the 56px regression guard), metal darkening formu
 monotonicity / hue preservation / clamp floor, cached WAV sample counts, formats,
 non-silence and stream identity (repeat plays reuse the identical object, no new players),
 registry durations, hardcoded-default source guards, every `_slow_factor` mutation guarded,
-live combo window 0.6s ↔ 1.0s, intro title/subtitle copy, and the heart loss → residue →
-Extra-Life restore (including the mid-fade rescue).
+live combo window 0.6s ↔ 1.0s, intro title/subtitle copy, converted scene color literals
+pinned to `GameTheme`, and the heart loss → residue → Extra-Life restore (including the
+mid-fade rescue).
 
 `tests/smoke_0823.gd` still passes unchanged.
 
@@ -167,7 +180,7 @@ Extra-Life restore (including the mid-fade rescue).
 | Command | Result |
 |---------|--------|
 | `Godot --headless --path . --editor --quit` | exit 0, **0** parse errors/warnings |
-| `Godot --headless --path . res://tests/smoke_0827.tscn` | exit 0, **100/100 PASS**, no engine noise |
+| `Godot --headless --path . res://tests/smoke_0827.tscn` | exit 0, **107/107 PASS**, no engine noise |
 | `Godot --headless --path . -s res://tests/smoke_0823.gd` | exit 0, ALL PASS (no regression) |
 | `Godot --headless --path . res://main.tscn --quit-after 400` | exit 0, 0 errors (was: scene failed to load) |
 | `Godot --headless --path . res://ui/title_screen.tscn --quit-after 200` | exit 0, 0 errors |
