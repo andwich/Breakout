@@ -132,4 +132,16 @@ All four must exit 0. `-s` scripts do **not** register autoload named-globals, s
 
 ---
 
+## Latest session — 31 (2026-10-01)
+
+Feedback 0827 rollout: authored level-intro copy + hearts restored at show-time (`ui/hud.gd`),
+boss bar width + progressive metal darkening (`entities/brick.gd`), cached launch/power-up/paddle-hit
+WAVs (`autoload/audio_manager.gd`), tweened paddle width via `visual_width` (`entities/paddle.gd`),
+slow-scaled combo window (`main.gd`), differentiated registry durations (8/10/6/6) with the hardcoded
+8.0s defaults removed — plus a **P0**: `main.tscn` and `hud.tscn` contained invalid color literals and
+failed to parse, so gameplay never loaded. New 100-check runtime harness in `tests/smoke_0827.tscn`.
+Detail: [docs/retro_1001.md](retro_1001.md).
+
+---
+
 *Session history: [docs/history.md](history.md). Per-session detail: `docs/retro_MMDD.md`.*
