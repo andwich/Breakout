@@ -37,15 +37,15 @@ main.tscn (Main : Node2D)
 | `game/game_state.gd` | Phase enum: `TITLE → LEVEL_INTRO → READY → PLAYING → ROUND_CLEAR` + `PAUSED`, `GAME_OVER`, `VICTORY` |
 | `game/level_defs.gd` | Static level configs: name, grid size, speed multiplier, brick HP, drop weights, optional `layout` string masks |
 | `game/level_builder.gd` | Brick geometry generation — mask-aware `_cell_is_filled()` skips empty cells when `layout` is set |
-| `game/powerup_registry.gd` | Central power-up metadata: icon, color, duration, weight |
+| `game/powerup_registry.gd` | Central power-up metadata: icon, color, duration (single tuning source), weight |
 
 ### Entities
 
 | File | Role |
 |------|------|
-| `entities/paddle.gd` | Movement, sticky mode, width effects, wall bounds, edge warnings, aim lines, centralized visual state (`refresh_visual_state()`) |
+| `entities/paddle.gd` | Movement, sticky mode, tweened width (`_set_paddle_width()` → `visual_width`), wall bounds, edge warnings, aim lines, centralized visual state (`refresh_visual_state()`) |
 | `entities/ball.gd` | Physics with substep anti-tunneling, launch, aim, collision response, stuck-ball escape, off-screen containment |
-| `entities/brick.gd` | HP, damage, destruction, row color, shader caching (scanline/glow), damage feedback particles |
+| `entities/brick.gd` | HP, damage, destruction, row color, shader caching (scanline/glow), progressive damage darkening (standard/metal/boss), damage feedback particles |
 | `entities/powerup.gd` | Collection (reads metadata from PowerUpRegistry), falling animation, rotation |
 | `entities/laser_manager.gd` | Auto-fire logic, phase-aware callback, beam spawning |
 | `entities/laser_beam.gd` | Projectile behavior, brick collision |
@@ -57,14 +57,22 @@ main.tscn (Main : Node2D)
 | File | Role |
 |------|------|
 | `ui/title_screen.gd` | Title card: high score, controls, power-up legend, breathing alpha pulse |
-| `ui/hud.gd` | Score, lives, multi-effect timer strip, level intro panel, pause/game-over text |
+| `ui/hud.gd` | Score, lives (hearts restored at show-time), multi-effect timer strip, level intro panel (authored title/subtitle), pause/game-over text |
 | `ui/victory.gd` | Win screen with confetti, endless mode entry |
+
+### Tests
+
+| File | Role |
+|------|------|
+| `tests/smoke_0823.gd` | `-s` headless checks: palette aliases, brick banding/damage colors, `TweenHelper`, stuck-ball escape invariant |
+| `tests/smoke_0827.gd` | Scene-run runtime harness (100 checks): HUD intro copy + heart restore, boss bar width, metal darkening, cached WAVs, paddle width tween, slow-scaled combo window |
+| `tests/smoke_0827.tscn` | Entry scene for the harness — required because `-s` does not register autoload named-globals |
 
 ### Autoloads (Singletons)
 
 | Autoload | File | Purpose |
 |----------|------|---------|
-| `AudioManager` | `autoload/audio_manager.gd` | Synthesized sound effects (8 PCM tones, play-and-forget), mute toggle |
+| `AudioManager` | `autoload/audio_manager.gd` | Synthesized sound effects (8 PCM tones), WAVs rendered once in `_ready()` and replayed via the pool, mute toggle |
 | `GameTheme` | `autoload/game_theme.gd` | Neon arcade palette: near-black BACKGROUND, cyan ACCENT, green SUCCESS, yellow WARNING, magenta DANGER, blue INFO; HUD_FONT_SIZE=22, CALLOUT_FONT_SIZE=76 |
 | `RunState` | `autoload/run_state.gd` | Transient session: `start_level`, `last_score` |
 | `SaveData` | `autoload/save_data.gd` | High score persistence to `user://breakout_save.json` |
@@ -255,6 +263,25 @@ Destroyable nodes (`Ball`, `Brick`) kill owned tweens in `_exit_tree()` to preve
 - **Persistence**: Single JSON file at `user://breakout_save.json` (high score only)
 - **Input**: Keyboard (A/D, Arrows, Space, Escape, M) + mouse (paddle follows cursor)
 
+### Scene Literal Syntax
+
+Godot's `.tscn` text format parses property values as variant literals; `Color(...)` accepts
+**numeric components only**. `theme_override_colors/font_color = Color("#00E5FF")` and
+`color = Color(GameTheme.BACKGROUND)` are silent-looking corruption: the headless editor scan
+(`--editor --quit`) reports zero problems, while instantiating the scene fails with
+`Failed loading resource` — which is how `main.tscn` shipped un-loadable for 13 "validated"
+sessions before Session 31. Scene colors must be floats (or be applied from GDScript), and the
+scene run gate (`--headless --path . res://main.tscn --quit-after 60`) is part of the gate.
+
+### Why The Smoke Harness Is A Scene
+
+Under `godot -s script.gd` the autoload *nodes* exist under `/root`, but autoload
+**named-globals are not registered**, so any script that references one (`hud.gd` →
+`SaveData.get_high_score()`, `main.gd` → `RunState`) fails to *compile* and its `.tscn`
+loads as `null`. `tests/smoke_0827.tscn` runs as the main scene instead, which keeps
+headless determinism while making the HUD and the run conductor reachable for real
+behavioral assertions. The suite exits non-zero on failure, so it is CI-shaped.
+
 ---
 
 ## Deployment / Runtime
@@ -275,6 +302,8 @@ Destroyable nodes (`Ball`, `Brick`) kill owned tweens in `_exit_tree()` to preve
 - **Combo carries across levels** — intentional streak continuity; only shake resets on level transition
 - **Brick entrance animation** — staggered with `TRANS_BACK` for visual polish, but means bricks aren't interactive until animation completes
 - **Endless mode** — generated from base level configs with scaled HP/speed; no authored layout beyond level 5
+- **Paddle width mid-tween** — collision shape and drawing animate together (`visual_width`), but `ball.gd`'s `hit_ratio` still divides by `target_width`, so an edge contact during the 0.15s grow/shrink deflects marginally shallower than the sprite suggests; self-corrects at tween end (tracked in `docs/retro_1001.md`)
+- **Metal brick tone** — `_update_visual()` uses a fixed steel `Color(0.7, 0.7, 0.9)` while `base_color` is `GameTheme.BRICK_DURABLE` (orange), so hit flashes peak orange and settle steel; deferred design decision
 
 ---
 
