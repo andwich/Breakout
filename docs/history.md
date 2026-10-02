@@ -2,6 +2,22 @@
 
 ---
 
+## Session 31 (2026-10-01) — Feedback 0827 fixes (+ P0 scene blocker)
+
+- **7 planned fixes + 1 blocker across 9 files + 2 new** — supervisor-corrected rollout of `docs/Feedback 0827.md`; scoring, combo awarding, `take_damage()` contract, launch suppression and sticky release paths untouched
+- **P0 (1, unplanned)**: `ui/hud.tscn` (13 literals) + `main.tscn` (1) contained invalid `.tscn` variant syntax (`Color("#00E5FF")`, `Color(GameTheme.BACKGROUND)`) — both scenes failed to parse, so **gameplay never loaded**; converted to numeric literals (colors unchanged). Discovered only because a scene was actually run: the `--editor --quit` gate reports zero errors for this class of corruption
+- **High (2)**: `ui/hud.gd` — `show_level_intro()` rendered hardcoded `"GO!"`/empty subtitle and discarded its `title`/`subtitle` arguments; now shows authored copy (subtitle hides when empty, `reset_size()` before pivot). `entities/brick.gd` — boss health bar base 56px → 40px, it overran its background above ~71% HP
+- **Medium (3)**: `ui/hud.gd` — hearts restored **at show-time** via `_heart_tweens[]` (Extra Life no longer re-shows a translucent/scaled-up heart; mid-fade rescue cancels the pending hide). `entities/brick.gd` — metal bricks darken progressively (`darkened(1.0 - clampf(hp_ratio, 0.3, 1.0))`, sprite + particles) instead of one static tone at 3 HP and 0. `main.gd` — combo window scales with slow (`_sync_combo_timer_wait()` = `0.6 / _slow_factor`, called at all four mutation sites; 1.0s under SLOW_BALLS)
+- **Low (2)**: `autoload/audio_manager.gd` — launch/power-up/paddle-hit WAVs synthesized once in `_ready()` and cached (thousands of samples + a `AudioStreamWAV` allocation per call removed from the hot path; output byte-identical). `game/powerup_registry.gd` — durations differentiated: STICKY 10.0, LASER 6.0, SLOW_BALLS 6.0, BIG_PADDLE 8.0; `apply_big_paddle()`/`enable_sticky()`/`activate()` now require `duration_sec` so the registry cannot be silently overridden
+- **Playability**: `entities/paddle.gd` — Big Paddle width tweens over 0.15s (`visual_width` + `_set_paddle_width()`); drawing and physics bounds read `visual_width` (shape tweens in lockstep), `reset()` snaps; duplicate `_process()` redraw removed, `_exit_tree()` kills the tween
+- **Tests**: `tests/smoke_0827.gd` + `.tscn` (new) — 100-check scene-run runtime harness, exit 0/1; scene-run is mandatory because `-s` does not register autoload named-globals (that is what hid the P0). `tests/smoke_0823.gd` still green
+- **Validation**: parse gate 0 errors; smoke_0827 100/100; `main.tscn` + `title_screen.tscn` headless runs 0 errors — Godot 4.7.2.stable
+- **Deferred**: `ball.gd` `hit_ratio` still divides by `target_width` (transient during width tween), metal tone vs `BRICK_DURABLE` orange flash target, centered boss bar fill, registry `on_recollect` metadata, HUD speed/streak indicators
+- **Files**: `ui/hud.gd`, `ui/hud.tscn`, `main.gd`, `main.tscn`, `entities/brick.gd`, `entities/paddle.gd`, `entities/laser_manager.gd`, `autoload/audio_manager.gd`, `game/powerup_registry.gd`, `tests/smoke_0827.gd` (new), `tests/smoke_0827.tscn` (new)
+- **Docs**: `docs/retro_1001.md` created; `docs/readme.md`, `AGENTS.md`, `docs/changelog.md`, `docs/architecture.md`, `docs/history.md` updated
+
+---
+
 ## Session 30 (2026-08-23) — Feedback 0815 2340 fixes
 
 - **10 commits across 8 files + 1 new** — full rollout of actionable items from `docs/Feedback 0815 2340.md`, each gated by headless parse
