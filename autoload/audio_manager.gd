@@ -7,6 +7,12 @@ var _muted := false
 var _saved_volume_db: float = 0.0
 var _brick_tone_pool: Array[AudioStreamWAV] = []
 
+# Synthesis is expensive (22 kHz sample loops); these three effects fire on every
+# paddle hit / launch / pickup, so their WAVs are rendered once in _ready() and reused.
+var _launch_wav: AudioStreamWAV
+var _powerup_wav: AudioStreamWAV
+var _paddle_hit_wav: AudioStreamWAV
+
 const BRICK_HIT_MIN_INTERVAL_MS := 28.0
 
 var _last_brick_hit_ms := -BRICK_HIT_MIN_INTERVAL_MS
@@ -18,6 +24,9 @@ var _next_player_idx := 0
 func _ready() -> void:
 	for i in range(5):
 		_brick_tone_pool.append(_make_tone([392.0, 440.0, 494.0, 587.33, 659.25][i], 0.05, 0.25))
+	_paddle_hit_wav = _make_paddle_hit_wav()
+	_launch_wav = _make_launch_wav()
+	_powerup_wav = _make_powerup_wav()
 	for i in range(PLAYER_POOL_SIZE):
 		var player := AudioStreamPlayer.new()
 		add_child(player)
@@ -103,19 +112,10 @@ static func _make_chord(freqs: Array[float], duration: float, volume: float = 0.
 	wav.stereo = false
 	return wav
 
-func play_brick_hit(pitch_factor: float = 1.0) -> void:
-	var now := Time.get_ticks_msec()
-	if now - _last_brick_hit_ms < BRICK_HIT_MIN_INTERVAL_MS:
-		return
-	_last_brick_hit_ms = now
-	var idx := mini(int(pitch_factor * 4.0), _brick_tone_pool.size() - 1)
-	idx = maxi(0, idx)
-	_play_stream(_brick_tone_pool[idx], -10.0)
+static func _make_paddle_hit_wav() -> AudioStreamWAV:
+	return _make_tone(120.0, 0.08, 0.2)
 
-func play_paddle_hit() -> void:
-	_play_stream(_make_tone(120.0, 0.08, 0.2), -12.0)
-
-func play_launch() -> void:
+static func _make_launch_wav() -> AudioStreamWAV:
 	var num_samples := int(SAMPLE_RATE * 0.12)
 	var data := PackedByteArray()
 	data.resize(num_samples * 2)
@@ -132,9 +132,9 @@ func play_launch() -> void:
 	wav.format = AudioStreamWAV.FORMAT_16_BITS
 	wav.mix_rate = SAMPLE_RATE
 	wav.stereo = false
-	_play_stream(wav, -8.0)
+	return wav
 
-func play_powerup() -> void:
+static func _make_powerup_wav() -> AudioStreamWAV:
 	var num_samples := int(SAMPLE_RATE * 0.25)
 	var data := PackedByteArray()
 	data.resize(num_samples * 2)
@@ -154,7 +154,25 @@ func play_powerup() -> void:
 	wav.format = AudioStreamWAV.FORMAT_16_BITS
 	wav.mix_rate = SAMPLE_RATE
 	wav.stereo = false
-	_play_stream(wav, -6.0)
+	return wav
+
+func play_brick_hit(pitch_factor: float = 1.0) -> void:
+	var now := Time.get_ticks_msec()
+	if now - _last_brick_hit_ms < BRICK_HIT_MIN_INTERVAL_MS:
+		return
+	_last_brick_hit_ms = now
+	var idx := mini(int(pitch_factor * 4.0), _brick_tone_pool.size() - 1)
+	idx = maxi(0, idx)
+	_play_stream(_brick_tone_pool[idx], -10.0)
+
+func play_paddle_hit() -> void:
+	_play_stream(_paddle_hit_wav, -12.0)
+
+func play_launch() -> void:
+	_play_stream(_launch_wav, -8.0)
+
+func play_powerup() -> void:
+	_play_stream(_powerup_wav, -6.0)
 
 func play_life_lost() -> void:
 	var num_samples := int(SAMPLE_RATE * 0.35)
