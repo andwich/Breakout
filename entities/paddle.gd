@@ -100,7 +100,7 @@ func _physics_process(delta: float) -> void:
 		aim_angle = clampf(velocity.x / speed * 45.0, -45.0, 45.0)
 
 	if has_caught_ball() and sticky_mode:
-		stuck_ball.global_position = global_position + Vector2(0, -get_ball_attach_offset())
+		stuck_ball.global_position = global_position + Vector2(0, -get_visual_ball_attach_offset())
 	if not is_equal_approx(aim_angle, _prev_aim):
 		_prev_aim = aim_angle
 		queue_redraw()
@@ -130,6 +130,10 @@ func _set_paddle_width(width: float, animated: bool = true) -> void:
 	target_width = width
 	TweenHelper.kill_if_valid(_width_tween)
 	_width_tween = null
+	if _shape == null or sprite == null:
+		# Pre-_ready call: record intent; _ready initializes visual from target.
+		visual_width = width
+		return
 	if not animated or not is_inside_tree():
 		_apply_width_pixels(width)
 		queue_redraw()
@@ -159,7 +163,7 @@ func _disable_sticky() -> void:
 	sticky_mode = false
 	refresh_visual_state()
 	if has_caught_ball():
-		stuck_ball.global_position = global_position + Vector2(0, -get_ball_attach_offset())
+		stuck_ball.global_position = global_position + Vector2(0, -get_visual_ball_attach_offset())
 		stuck_ball.velocity = Vector2.ZERO
 		stuck_ball.launched = false
 	if get_tree().paused or not is_processing() or (_sticky_release_callback.is_valid() and not _sticky_release_callback.call()):
@@ -184,7 +188,7 @@ func stick_ball(ball: Ball) -> bool:
 	if has_caught_ball():
 		return false
 	stuck_ball = ball
-	ball.global_position = global_position + Vector2(0, -get_ball_attach_offset())
+	ball.global_position = global_position + Vector2(0, -get_visual_ball_attach_offset())
 	show_aim = true
 	refresh_visual_state()
 	sticky_ball_caught.emit()
@@ -205,7 +209,8 @@ func set_sticky_release_callback(cb: Callable) -> void:
 	_sticky_release_callback = cb
 
 func is_big_paddle_active() -> bool:
-	return target_width > normal_width
+	# Either intent or in-flight visual counts: the tint must survive the shrink tween.
+	return target_width > normal_width or visual_width > normal_width
 
 func has_caught_ball() -> bool:
 	return stuck_ball != null and is_instance_valid(stuck_ball)

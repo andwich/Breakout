@@ -7,11 +7,12 @@ var _muted := false
 var _saved_volume_db: float = 0.0
 var _brick_tone_pool: Array[AudioStreamWAV] = []
 
-# Synthesis is expensive (22 kHz sample loops); these three effects fire on every
-# paddle hit / launch / pickup, so their WAVs are rendered once in _ready() and reused.
+# Synthesis is expensive (22 kHz sample loops); paddle hit / launch / pickup / laser
+# fire at high rates, so their WAVs are rendered once in _ready() and reused.
 var _launch_wav: AudioStreamWAV
 var _powerup_wav: AudioStreamWAV
 var _paddle_hit_wav: AudioStreamWAV
+var _laser_fire_wav: AudioStreamWAV
 
 const BRICK_HIT_MIN_INTERVAL_MS := 28.0
 
@@ -27,6 +28,7 @@ func _ready() -> void:
 	_paddle_hit_wav = _make_paddle_hit_wav()
 	_launch_wav = _make_launch_wav()
 	_powerup_wav = _make_powerup_wav()
+	_laser_fire_wav = _make_tone(440.0, 0.05, 0.15)
 	for i in range(PLAYER_POOL_SIZE):
 		var player := AudioStreamPlayer.new()
 		add_child(player)
@@ -201,4 +203,4 @@ func play_game_over() -> void:
 	_play_stream(_make_chord([349.23, 311.13, 261.63] as Array[float], 0.6, 0.25), -8.0)
 
 func play_laser_fire() -> void:
-	_play_stream(_make_tone(440.0, 0.05, 0.15), -12.0)
+	_play_stream(_laser_fire_wav, -12.0)

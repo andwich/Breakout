@@ -36,7 +36,7 @@ func _ready():
 	_hp = max_hp
 	match brick_type:
 		"metal":
-			base_color = GameTheme.BRICK_DURABLE
+			base_color = Color(0.7, 0.7, 0.9)
 			_shader_mat = ShaderMaterial.new()
 			_shader_mat.shader = SCAN_SHADER
 			_shader_mat.set_shader_parameter("frequency", 40.0)
@@ -158,7 +158,7 @@ func _update_visual():
 		_hp_label.visible = max_hp > 1
 	match brick_type:
 		"boss":
-			var hp_ratio := float(_hp) / float(max_hp)
+			var hp_ratio := clampf(float(_hp) / float(max_hp), 0.0, 1.0)
 			var dimmed := GameTheme.BRICK_BOSS.darkened(1.0 - clampf(hp_ratio, 0.3, 1.0))
 			if _health_bar:
 				_health_bar.size.x = 40.0 * hp_ratio

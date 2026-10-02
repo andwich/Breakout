@@ -74,11 +74,12 @@ func update_lives(new_lives: int) -> void:
 			lost = true
 			hearts[i].visible = true
 			TweenHelper.kill_if_valid(_heart_tweens[i])
+			var heart := hearts[i]
 			var tw := create_tween()
 			_heart_tweens[i] = tw
-			tw.tween_property(hearts[i], "scale", Vector2(1.5, 1.5), 0.1)
-			tw.parallel().tween_property(hearts[i], "modulate:a", 0.0, 0.2)
-			tw.tween_callback(func(): hearts[i].visible = false)
+			tw.tween_property(heart, "scale", Vector2(1.5, 1.5), 0.1)
+			tw.parallel().tween_property(heart, "modulate:a", 0.0, 0.2)
+			tw.tween_callback(heart.hide)
 	if new_lives > hearts.size():
 		lives_overflow.text = "+%d" % (new_lives - hearts.size())
 		lives_overflow.visible = true
@@ -87,6 +88,7 @@ func update_lives(new_lives: int) -> void:
 	if not lost:
 		for i in hearts.size():
 			if hearts[i].visible:
+				TweenHelper.kill_if_valid(_heart_tweens[i])
 				var tw := create_tween()
 				_heart_tweens[i] = tw
 				tw.tween_property(hearts[i], "scale", Vector2(1.3, 1.3), 0.08)

@@ -581,7 +581,8 @@ func _flash_effect(at: Vector2, color: Color, size: float = 20.0) -> void:
 	ring.play(at, color, size, 3.0, 0.3)
 
 ## The combo window is measured in real time while the ball runs slower under
-## SLOW_BALLS, so the window widens inversely with `_slow_factor` (0.6 -> 1.0s).
+## SLOW_BALLS, so newly started windows widen inversely with `_slow_factor`
+## (0.6 -> 1.0s). An already-running window keeps its original expiry.
 func _sync_combo_timer_wait() -> void:
 	if _combo_timer:
 		_combo_timer.wait_time = 0.6 / _slow_factor

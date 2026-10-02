@@ -1,0 +1,25 @@
+name: Validate
+
+# Manual runs only — no automatic triggers on push/PR.
+on:
+  workflow_dispatch:
+
+jobs:
+  headless-checks:
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.7
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Editor parse gate
+        run: godot --headless --path . --editor --quit
+
+      - name: Main scene loads
+        run: godot --headless --path . res://main.tscn --quit-after 60
+
+      - name: Smoke harness (scene-run)
+        run: godot --headless --path . res://tests/smoke_0827.tscn
+
+      - name: Smoke checks (script)
+        run: godot --headless --path . -s res://tests/smoke_0823.gd

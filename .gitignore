@@ -1,0 +1,19 @@
+# Godot 4
+.godot/
+*.translation
+*.tmp
+
+# Godot exports
+exports/
+*.apk
+*.aab
+*.exe
+*.pck
+*.zip
+
+# macOS / editors
+.DS_Store
+*.orig
+
+# Agent scratch logs (checkpoint noise, not source)
+.pi/
