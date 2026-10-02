@@ -21,11 +21,15 @@ var hearts: Array[Label] = []
 var _effect_rows: Dictionary = {}
 var _effect_tweens: Dictionary = {}
 var _score_tween: Tween
+# Parallel array to `hearts`: the in-flight fade/pulse tween per heart, so a
+# re-shown heart can cancel its own pending loss animation.
+var _heart_tweens: Array[Tween] = []
 
 func _ready() -> void:
 	for child in lives_container.get_children():
 		if child is Label and child != lives_overflow:
 			hearts.append(child)
+	_heart_tweens.resize(hearts.size())
 
 	game_over_label.visible = false
 	pause_label.visible = false
@@ -56,11 +60,22 @@ func update_lives(new_lives: int) -> void:
 	var lost := false
 	for i in hearts.size():
 		var was_visible := hearts[i].visible
-		hearts[i].visible = i < new_lives
-		if was_visible and not hearts[i].visible:
+		var show_now := i < new_lives
+		hearts[i].visible = show_now
+		if show_now:
+			# Restore at show-time: a heart re-shown by an Extra Life keeps the
+			# modulate:a = 0 / scale = 1.5 residue of a previous loss fade, and an
+			# in-flight fade would otherwise hide it again after it is re-awarded.
+			TweenHelper.kill_if_valid(_heart_tweens[i])
+			_heart_tweens[i] = null
+			hearts[i].modulate.a = 1.0
+			hearts[i].scale = Vector2.ONE
+		elif was_visible:
 			lost = true
 			hearts[i].visible = true
+			TweenHelper.kill_if_valid(_heart_tweens[i])
 			var tw := create_tween()
+			_heart_tweens[i] = tw
 			tw.tween_property(hearts[i], "scale", Vector2(1.5, 1.5), 0.1)
 			tw.parallel().tween_property(hearts[i], "modulate:a", 0.0, 0.2)
 			tw.tween_callback(func(): hearts[i].visible = false)
@@ -73,6 +88,7 @@ func update_lives(new_lives: int) -> void:
 		for i in hearts.size():
 			if hearts[i].visible:
 				var tw := create_tween()
+				_heart_tweens[i] = tw
 				tw.tween_property(hearts[i], "scale", Vector2(1.3, 1.3), 0.08)
 				tw.tween_property(hearts[i], "scale", Vector2(1.0, 1.0), 0.15)
 
@@ -126,13 +142,15 @@ func show_level_complete(show: bool, level: int = 0) -> void:
 		tw.parallel().tween_property(level_complete_label, "modulate:a", 1.0, 0.2)
 
 func show_level_intro(title: String, subtitle: String = "") -> void:
-	level_intro_title.text = "GO!"
+	level_intro_title.text = title
 	level_intro_title.add_theme_color_override("font_color", GameTheme.SUCCESS)
-	level_intro_subtitle.text = ""
-	level_intro_subtitle.visible = false
+	level_intro_subtitle.text = subtitle
+	level_intro_subtitle.visible = subtitle != ""
 	level_intro_panel.modulate.a = 0.0
 	level_intro_panel.visible = true
 	level_intro_title.scale = Vector2(0.78, 0.78)
+	# Title text just changed (autowrap label) — reflow before taking the pivot.
+	level_intro_title.reset_size()
 	level_intro_title.pivot_offset = level_intro_title.size * 0.5
 	var tw := create_tween()
 	tw.tween_property(level_intro_panel, "modulate:a", 1.0, 0.08)
