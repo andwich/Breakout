@@ -147,7 +147,7 @@ res://
 27. **Overlay tween ownership** — `main.gd` flash/slow overlay tweens stored as `_flash_tween`/`_slow_tween` members; killed before recreate; reset in `_start_new_run()`
 28. **Headless validation gate** — after every GDScript edit, run `godot --headless --path . --editor --quit` and fix all parse errors before reporting completion
 29. **Explicit scene preloads** — declare scene constants as `const X: PackedScene = preload(...)`; never rely on `:=` inference for preloads (a missing or corrupt scene produces a cascade of inference errors). Keep `.tscn` section order canonical: all `[sub_resource]` blocks must precede all `[node]` blocks
-30. **Scene literals must be numeric** — `.tscn` property values accept `Color(r, g, b, a)` floats only. `Color("#00E5FF")` and `Color(GameTheme.BACKGROUND)` are *parse errors* that the editor scan gate does **not** report; they surface only as `Failed loading resource` when the scene is actually instantiated. Put colors in `.tscn` as floats (or set them from scripts), and validate with a scene run, not just `--editor --quit`
+30. **Scene literals must be numeric** — `.tscn` property values accept `Color(r, g, b, a)` floats only. `Color("#00E5FF")` and `Color(GameTheme.BACKGROUND)` are *parse errors* that the editor scan gate does **not** report; they surface only as `Failed loading resource` when the scene is actually instantiated. Put colors in `.tscn` as floats (or set them from scripts), validate with a scene run (not just `--editor --quit`), and **pin converted values to their `GameTheme` source** in `tests/smoke_0827.gd` — the engine checks syntax, never hue
 31. **Paddle width: `target_width` is intent, `visual_width` is reality** — never write `_shape.size.x` / `sprite.offset_*` / `target_width` directly; call `_set_paddle_width(width, animated)` (animated for power-ups, `false` in `reset()`). All drawing (`_draw()` glow, edge warnings, aim origin) and physics geometry (wall bounds, mouse dead zone) read `visual_width` because the collision shape tweens with it; `get_ball_attach_offset()` still returns the intent-based offset
 32. **Cached audio only** — `play_*()` functions are one-liners over a WAV rendered once in `_ready()` (`_launch_wav`, `_powerup_wav`, `_paddle_hit_wav`, `_brick_tone_pool`). Never synthesize samples inside a play function; add a `_make_*_wav()` static maker plus a cached member instead
 33. **Registry owns durations** — effect entry points (`paddle.apply_big_paddle()`, `paddle.enable_sticky()`, `laser_manager.activate()`) take a required `duration_sec: float` with **no default**; `PowerUpRegistry.DEFS["duration"]` is the single tuning source (BIG_PADDLE 8.0 / STICKY 10.0 / LASER 6.0 / SLOW_BALLS 6.0). Untimed types stay 0.0
@@ -240,6 +240,7 @@ When making changes, verify:
 - [ ] Edge paddle hits exit visibly steeper than center hits (~45° max)
 - [ ] Brick damage flash tints toward the brick's own hue, never pure white
 - [ ] `main.tscn` loads headless with zero `Failed loading resource` (scene literals)
+- [ ] HUD/scene label colors still match `GameTheme` after any `.tscn` color edit
 - [ ] Metal bricks darken visibly per hit; 1-HP-of-8 stays above black
 - [ ] Boss health bar never overflows its 40px background
 - [ ] Re-awarded heart (Extra Life) is fully opaque and unscaled, even if collected mid loss-fade
