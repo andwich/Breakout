@@ -2,7 +2,7 @@
 ::res://::1790913431
 AGENTS.md::TextFile::-1::1787484458::0::1::::<><><>0<>0<><>::
 main.gd::GDScript::2998372749516647317::1790914617::0::1::::<>Node2D<><>0<>0<><>::
-main.tscn::PackedScene::-1::1786850711::0::1::::<><><>0<>0<><>::res://main.gd<>res://entities/paddle.tscn<>res://entities/laser_manager.gd<>res://ui/hud.tscn<>res://shaders/scanline.gdshader<>res://entities/playfield_border.gd
+main.tscn::PackedScene::-1::1790915276::0::1::::<><><>0<>0<><>::res://main.gd<>res://entities/paddle.tscn<>res://entities/laser_manager.gd<>res://ui/hud.tscn<>res://shaders/scanline.gdshader<>res://entities/playfield_border.gd
 ::res://assets/::1786765705
 ::res://assets/fonts/::1787484028
 Mono-Bold.ttf::FontFile::253414026449559646::1786765718::1786765738::1::::<><><>0<>0<>8c12d473f0481e8439a81d7443a17f0f<>res://.godot/imported/Mono-Bold.ttf-cfbf6e98bb12e8ea03c07e0740081654.fontdata::
@@ -115,11 +115,13 @@ tween_helper.gd::GDScript::5860783860242857252::1787484331::0::1::::TweenHelper<
 ::res://shaders/::1786304623
 brick_glow.gdshader::Shader::3128636571185832827::1778044473::0::1::::<><><>0<>0<><>::
 scanline.gdshader::Shader::7776086058787016724::1778033023::0::1::::<><><>0<>0<><>::
-::res://tests/::1787489557
+::res://tests/::1790914991
 smoke_0823.gd::GDScript::6853163755448677057::1787489548::0::1::::<>SceneTree<><>0<>0<><>::
+smoke_0827.gd::GDScript::2515344867830783541::1790915349::0::1::::<>Node<><>0<>0<><>::
+smoke_0827.tscn::PackedScene::-1::1790914991::0::1::::<><><>0<>0<><>::res://tests/smoke_0827.gd
 ::res://ui/::1786767211
 hud.gd::GDScript::7960555521784194321::1790914571::0::1::::HUD<>CanvasLayer<><>0<>0<><>::
-hud.tscn::PackedScene::-1::1786850711::0::1::::<><><>0<>0<><>::res://ui/hud.gd
+hud.tscn::PackedScene::-1::1790915276::0::1::::<><><>0<>0<><>::res://ui/hud.gd
 title_screen.gd::GDScript::1436998966108321059::1786767689::0::1::::<>Control<><>0<>0<><>::
 title_screen.tscn::PackedScene::-1::1786767632::0::1::::<><><>0<>0<><>::res://ui/title_screen.gd<>res://shaders/scanline.gdshader
 victory.gd::GDScript::8657988740833031883::1786769381::0::1::::<>Control<><>0<>0<><>::
