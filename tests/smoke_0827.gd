@@ -55,6 +55,7 @@ func _run_all() -> void:
 	_test_metal_darkening()
 	_test_audio_wav_cache()
 	await _test_hud_level_intro()
+	await _test_scene_color_literals()
 	await _test_hud_heart_restore()
 	await _test_paddle_width_tween()
 	await _test_combo_timer_runtime()
@@ -396,6 +397,34 @@ func _test_hud_level_intro() -> void:
 	hud.hide_level_intro()
 	await get_tree().process_frame
 	hud.free()
+
+
+## Scene files must carry the palette exactly: `.tscn` takes numeric literals only, so
+## every hex/identifier literal had to be converted — this pins the converted values to
+## GameTheme so a bad conversion can never ship silently.
+func _test_scene_color_literals() -> void:
+	var hud: HUD = HUD_SCENE.instantiate()
+	get_tree().root.add_child(hud)
+	await get_tree().process_frame
+	var labels: Array[Label] = [hud.score_label, hud.level_label, hud.hearts[0],
+		hud.high_score_label, hud.level_complete_label, hud.game_over_label]
+	var expected: Array[Color] = [THEME.ACCENT, THEME.WARNING, THEME.DANGER,
+		THEME.TEXT_MUTED, THEME.WARNING, THEME.DANGER]
+	var names: Array[String] = ["ScoreLabel", "LevelLabel", "Heart1",
+		"HighScoreLabel", "LevelCompleteLabel", "GameOverLabel"]
+	for i in range(labels.size()):
+		_check(_colors_close(labels[i].get_theme_color("font_color"), expected[i]),
+			"%s color matches GameTheme (scene got %s, want %s)"
+			% [names[i], labels[i].get_theme_color("font_color"), expected[i]])
+	hud.free()
+
+	var main: Node = MAIN_SCENE.instantiate()
+	get_tree().root.add_child(main)
+	await get_tree().process_frame
+	var bg := main.get_node_or_null("BackgroundOverlay") as ColorRect
+	_check(bg != null and _colors_close(bg.color, THEME.BACKGROUND),
+		"BackgroundOverlay color matches GameTheme.BACKGROUND (got %s)" % (bg.color if bg else Color()))
+	main.free()
 
 
 # ---------------------------------------------------------------------------
