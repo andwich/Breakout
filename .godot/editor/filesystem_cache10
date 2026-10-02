@@ -1,8 +1,8 @@
 78098b89c88a74ebe8c20117b8754620
 ::res://::1790913431
-AGENTS.md::TextFile::-1::1790915537::0::1::::<><><>0<>0<><>::
+AGENTS.md::TextFile::-1::1790915828::0::1::::<><><>0<>0<><>::
 main.gd::GDScript::2998372749516647317::1790914617::0::1::::<>Node2D<><>0<>0<><>::
-main.tscn::PackedScene::-1::1790915276::0::1::::<><><>0<>0<><>::res://main.gd<>res://entities/paddle.tscn<>res://entities/laser_manager.gd<>res://ui/hud.tscn<>res://shaders/scanline.gdshader<>res://entities/playfield_border.gd
+main.tscn::PackedScene::-1::1790915739::0::1::::<><><>0<>0<><>::res://main.gd<>res://entities/paddle.tscn<>res://entities/laser_manager.gd<>res://ui/hud.tscn<>res://shaders/scanline.gdshader<>res://entities/playfield_border.gd
 ::res://assets/::1786765705
 ::res://assets/fonts/::1787484028
 Mono-Bold.ttf::FontFile::253414026449559646::1786765718::1786765738::1::::<><><>0<>0<>8c12d473f0481e8439a81d7443a17f0f<>res://.godot/imported/Mono-Bold.ttf-cfbf6e98bb12e8ea03c07e0740081654.fontdata::
@@ -14,13 +14,13 @@ run_state.gd::GDScript::8654542282706221109::1777953624::0::1::::<>Node<><>0<>0<
 save_data.gd::GDScript::2027501204691251224::1786303066::0::1::::<>Node<><>0<>0<><>::
 screen_transition.gd::GDScript::7328282335301627452::1786420619::0::1::::<>CanvasLayer<><>0<>0<><>::
 ::res://docs/::1790915466
-architecture.md::TextFile::-1::1790915610::0::1::::<><><>0<>0<><>::
-changelog.md::TextFile::-1::1790915635::0::1::::<><><>0<>0<><>::
+architecture.md::TextFile::-1::1790915783::0::1::::<><><>0<>0<><>::
+changelog.md::TextFile::-1::1790915834::0::1::::<><><>0<>0<><>::
 Feedback 0827.md::TextFile::-1::1790654588::0::1::::<><><>0<>0<><>::
-history.md::TextFile::-1::1790915662::0::1::::<><><>0<>0<><>::
-readme.md::TextFile::-1::1790915675::0::1::::<><><>0<>0<><>::
+history.md::TextFile::-1::1790915783::0::1::::<><><>0<>0<><>::
+readme.md::TextFile::-1::1790915783::0::1::::<><><>0<>0<><>::
 retro_0823.md::TextFile::-1::1787494319::0::1::::<><><>0<>0<><>::
-retro_1001.md::TextFile::-1::1790915477::0::1::::<><><>0<>0<><>::
+retro_1001.md::TextFile::-1::1790915813::0::1::::<><><>0<>0<><>::
 ::res://docs/_Archive/::1790654632
 additional thoughts 0501.md::TextFile::-1::1777686372::0::1::::<><><>0<>0<><>::
 breakout-implementation-plan 0510 2035.md::TextFile::-1::1778460064::0::1::::<><><>0<>0<><>::
@@ -118,11 +118,11 @@ brick_glow.gdshader::Shader::3128636571185832827::1778044473::0::1::::<><><>0<>0
 scanline.gdshader::Shader::7776086058787016724::1778033023::0::1::::<><><>0<>0<><>::
 ::res://tests/::1790915385
 smoke_0823.gd::GDScript::6853163755448677057::1787489548::0::1::::<>SceneTree<><>0<>0<><>::
-smoke_0827.gd::GDScript::2515344867830783541::1790915349::0::1::::<>Node<><>0<>0<><>::
+smoke_0827.gd::GDScript::2515344867830783541::1790915761::0::1::::<>Node<><>0<>0<><>::
 smoke_0827.tscn::PackedScene::-1::1790914991::0::1::::<><><>0<>0<><>::res://tests/smoke_0827.gd
 ::res://ui/::1786767211
 hud.gd::GDScript::7960555521784194321::1790914571::0::1::::HUD<>CanvasLayer<><>0<>0<><>::
-hud.tscn::PackedScene::-1::1790915276::0::1::::<><><>0<>0<><>::res://ui/hud.gd
+hud.tscn::PackedScene::-1::1790915739::0::1::::<><><>0<>0<><>::res://ui/hud.gd
 title_screen.gd::GDScript::1436998966108321059::1786767689::0::1::::<>Control<><>0<>0<><>::
 title_screen.tscn::PackedScene::-1::1786767632::0::1::::<><><>0<>0<><>::res://ui/title_screen.gd<>res://shaders/scanline.gdshader
 victory.gd::GDScript::8657988740833031883::1786769381::0::1::::<>Control<><>0<>0<><>::
