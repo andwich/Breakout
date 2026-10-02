@@ -36,7 +36,7 @@ func _clear_live_beams() -> void:
 		if child is Area2D:
 			child.queue_free()
 
-func activate(duration_sec: float = 8.0) -> void:
+func activate(duration_sec: float) -> void:
 	_active = true
 	_fire_timer.start()
 	_duration_timer.start(duration_sec)
