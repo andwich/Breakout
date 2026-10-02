@@ -15,13 +15,15 @@ A modern breakout game inspired by Atari's classic, built with **Godot 4.x** fea
 
 ## Features
 
-- **6 power-up types**: Multiball, Big Paddle, Sticky, Laser, Slow Balls, Extra Life
+- **6 power-up types** with differentiated durations: Multiball, Big Paddle (8s), Sticky (10s), Laser (6s), Slow Balls (6s), Extra Life
 - **5 hand-crafted levels** with progressive difficulty → Endless mode
-- **3 brick types**: Standard (1 HP), Metal (3 HP, scanline shader), Boss (5 HP, pulsing glow)
+- **3 brick types**: Standard (1 HP), Metal (3 HP, scanline shader, progressive darkening), Boss (5 HP, pulsing glow + health bar)
 - **Neon palette**: near-black playfield with cyan/green/yellow/magenta/orange brick bands, ball/paddle glow halos, particle FX
 - **Controls**: Keyboard (A/D, Arrows, Space) or mouse (paddle follows cursor)
-- **Audio**: Synthesized tones (brick hit, paddle hit, launch, power-up, etc.)
+- **Audio**: Synthesized tones cached once at startup (brick hit, paddle hit, launch, power-up, etc.)
+- **Animated paddle**: Big Paddle grows/shrinks over ~0.15s instead of snapping
 - **Persistent high scores**
+- **Headless smoke suites**: `tests/smoke_0823.gd` (`-s`) and `tests/smoke_0827.tscn` (scene-run, 100 checks)
 
 ---
 
@@ -46,6 +48,7 @@ res://
 ├── entities/               # Paddle, Ball, Brick, PowerUp, LaserManager, LaserBeam, RingEffect, PlayfieldBorder
 ├── ui/                     # TitleScreen, HUD, Victory
 ├── shaders/                # brick_glow.gdshader, scanline.gdshader
+├── tests/                  # smoke_0823.gd (-s), smoke_0827.gd/.tscn (scene-run runtime harness)
 └── docs/                   # Readme, history, retro notes, agents guide
 ```
 
